@@ -36,4 +36,4 @@ minval = np.min(events)
 img = nib.Nifti1Image(events, affine=nii_template.affine)
 img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
-nib.save(img,datadir + str(event_length) + '_sec_events_cb_edit.nii.gz') 
+nib.save(img,datadir + str(event_length) + '_sec_events.nii.gz') 
