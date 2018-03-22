@@ -7,10 +7,10 @@ k = np.arange(2,20)
 nii_template = nib.load('/jukebox/norman/jamalw/MES/subjects/MES_022817_0/analysis/run1.feat/trans_filtered_func_data.nii')
 
 ## Z-SCORED SEARCHLIGHT RESULTS
-avg_data = np.zeros((91,109,91))
 
 # Take average K within songs. This should tell you which voxels were most active for a particular song regardless of K.
 for i in range(len(songs)):
+    avg_data = np.zeros((91,109,91))
     datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + songs[i] + '/avg_data/'
     for j in range(len(k)):
         fn = datadir + 'globals_avg_z_n25_k' + str(k[j]) + '.npy'
@@ -23,10 +23,10 @@ for i in range(len(songs)):
     img.header['cal_max'] = maxval
     nib.save(img,datadir + 'avg_z_across_K.nii.gz')
 
-avg_data = np.zeros((91,109,91))
 
 # Take average across songs
 for i in range(len(k)):
+    avg_data = np.zeros((91,109,91))
     for j in range(len(songs)):
         datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + songs[j] + '/avg_data/' 
         fn = datadir + 'globals_avg_z_n25_k' + str(k[i]) + '.npy'
@@ -41,10 +41,10 @@ for i in range(len(k)):
 
 
 ## RAW SEARCHLIGHT RESULTS
-avg_data = np.zeros((91,109,91))
 
 # Take average K within songs. This should tell you which voxels were most active for a particular song regardless of K.
 for i in range(len(songs)):
+    avg_data = np.zeros((91,109,91))
     datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + songs[i] + '/avg_data/'
     for j in range(len(k)):
         fn = datadir + 'globals_avg_real_n25_k' + str(k[j]) + '.npy'
@@ -57,10 +57,10 @@ for i in range(len(songs)):
     img.header['cal_max'] = maxval
     nib.save(img,datadir + 'avg_real_across_K.nii.gz')
 
-avg_data = np.zeros((91,109,91))
 
 # Take average across songs
 for i in range(len(k)):
+    avg_data = np.zeros((91,109,91))
     for j in range(len(songs)):
         datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + songs[j] + '/avg_data/' 
         fn = datadir + 'globals_avg_real_n25_k' + str(k[i]) + '.npy'
