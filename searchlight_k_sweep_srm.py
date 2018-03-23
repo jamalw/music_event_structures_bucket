@@ -158,11 +158,11 @@ for i in k_sweeper:
     coords = np.vstack((x,y,z)).T 
     coords_mask = coords[mask_reshape>0]
     print('Running Distribute...')
-    voxmean,real_sl_scores = searchlight(coords_mask,i,mask,loo_idx,subjs,song_idx,song_bounds) 
-    results3d[mask>0] = voxmean[:,0]
-    results3d_real[mask>0] = real_sl_scores[:,0]
-    for j in range(voxmean.shape[1]):
-        results3d_perms[mask>0,j] = voxmean[:,j]
+    vox_z,raw_wVa_scores = searchlight(coords_mask,i,mask,loo_idx,subjs,song_idx,song_bounds) 
+    results3d[mask>0] = vox_z[:,0]
+    results3d_real[mask>0] = raw_wVa_scores[:,0]
+    for j in range(vox_z.shape[1]):
+        results3d_perms[mask>0,j] = vox_z[:,j]
  
     print('Saving ' + subj + ' to Searchlight Folder')
     np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/real/globals_loo_' + subj + '_K_real' + str(i), results3d_real)
