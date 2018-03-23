@@ -27,19 +27,7 @@ for i in range(91):
             thresh[i,j,k] = z_data[i,j,k,max_K[i,j,k]-3]
 
 max_K[thresh < .1] = 0
-#max_K_mask = max_K == 3
-#max_K = max_K_mask * 3
-#max_K = np.where(max_K == 3,3,0)
-#max_K4 = np.where(max_K == 4,4,0)
-k = 3
 z_thresh = 0.02
-output = np.where((max_K == k) & (z_data[:, :, :, k-1] >= z_thresh), k, 0)
-
-#stack = []
-#for k in range(3, 13):
-#     stack.append(np.where((max_K == k) & (z_data[:, :, :, k-3] > z_thresh), k, 0))
-#all_max_K = np.sum(stack, axis=0)
-
 
 # save final map as nifti
 maxval = np.max(max_K)
@@ -49,10 +37,4 @@ img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
 nib.save(img, datadir + 'best_k_map.nii.gz')
 
-maxval = np.max(output)
-minval = np.min(output)
-img = nib.Nifti1Image(output,affine = nii_template.affine)
-img.header['cal_min'] = minval
-img.header['cal_max'] = maxval
-nib.save(img, datadir + 'single_k_map.nii.gz')
 
