@@ -82,7 +82,7 @@ song_titles = ['St Pauls Suite', 'I Love Music', 'Moonlight Sonata', 'Change of 
 plt.title('HMM Fit to Precuneus for ' + song_titles[song_number],fontsize=18,fontweight='bold')
 plt.xlabel('TRs',fontsize=18,fontweight='bold')
 plt.ylabel('TRs',fontsize=18,fontweight='bold')
-#plt.legend(handles=[rect1,rect2])
+plt.legend(handles=[rect1,rect2])
 
 #for i in range(len(human_bounds2)-1):
 #    plt.figure(i+1)
