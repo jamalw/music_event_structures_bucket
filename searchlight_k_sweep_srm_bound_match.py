@@ -68,8 +68,8 @@ def searchlight(coords,K,mask,loo_idx,subjs,song_idx,song_bounds):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    data.append(np.nan_to_num(stats.zscore(subj_data[:,:,1],axis=1,ddof=1))) 
                print("Running Searchlight")
-               SL_within_across = HMM(data,K,loo_idx,song_idx,song_bounds)
-               SL_results.append(SL_within_across)
+               SL_match = HMM(data,K,loo_idx,song_idx,song_bounds)
+               SL_results.append(SL_match)
                SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0], nPerm+1))
     vox_SLcount = np.zeros(coords.shape[0])
@@ -102,7 +102,7 @@ def HMM(X,K,loo_idx,song_idx,song_bounds):
 
     """
     
-    w = 6
+    w = 5
     nPerm = 1000
     run1 = [X[i] for i in np.arange(0, int(len(X)/2))]
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
@@ -120,20 +120,17 @@ def HMM(X,K,loo_idx,song_idx,song_bounds):
     # Fit to all but one subject
     ev = brainiak.eventseg.event.EventSegment(K)
     ev.fit(others[:,song_bounds[song_idx]:song_bounds[song_idx + 1]].T)
-    events = np.argmax(ev.segments_[0],axis=1)
-    bounds = np.where(np.diff(np.argmax(ev.segments_[0],axis=1)))[0]
-    event_counts = np.diff(np.concatenate(([0],bounds,[nTR])))
+    bounds = np.where(np.diff(np.argmax(ev.segments_[0],axis=1)))[0] 
     match = np.zeros(nPerm+1)
-    perm_bounds = bounds
+    perm_bounds = bounds.copy()
 
     for p in range(nPerm+1):
         for hb in human_bounds:
-            if np.any(np.abs(perm_bounds - hb) <= 6):
+            if np.any(np.abs(perm_bounds - hb) <= w):
                 match[p] += 1
         match[p] /= len(human_bounds)
         np.random.seed(p)
-        perm_counts = np.random.permutation(event_counts)
-        perm_bounds = np.cumsum(perm_counts)[:-1]
+        perm_bounds = np.random.choice(nTR,K-1,replace=False) 
 
     return match
 
