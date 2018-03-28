@@ -26,9 +26,15 @@ human_bounds = np.append(0,np.append(human_bounds,durs[song_number]))
 
 song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
 
+hrf = 3
+
+# Get start and end of chosen song
+start = song_bounds[song_number] + hrf
+end = song_bounds[song_number + 1] + hrf
+
 # Load in data
-train = np.nan_to_num(stats.zscore(np.load(datadir + 'precuneus_k12ish_run1_n25.npy'),axis=1,ddof=1))
-test = np.nan_to_num(stats.zscore(np.load(datadir + 'precuneus_k12ish_run2_n25.npy'),axis=1,ddof=1))
+train = np.nan_to_num(stats.zscore(np.load(datadir + 'A1_run1_n25.npy'),axis=1,ddof=1))
+test = np.nan_to_num(stats.zscore(np.load(datadir + 'A1_run2_n25.npy'),axis=1,ddof=1))
 
 # Convert data into lists where each element is voxels by samples
 train_list = []
@@ -50,10 +56,6 @@ print('Testing Model')
 shared_data = srm.transform(test_list)
 
 avg_response = sum(shared_data)/len(shared_data)
-
-# Get start and end of chosen song
-start = song_bounds[song_number]
-end = song_bounds[song_number + 1]
 
 nR = shared_data[0].shape[0]
 nTR = shared_data[0][:,start:end].shape[1]
