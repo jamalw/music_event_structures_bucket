@@ -9,10 +9,22 @@ from scipy.signal import gaussian, convolve
 from sklearn import decomposition
 import numpy as np
 from brainiak.funcalign.srm import SRM
+import sys
 
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/chris_dartmouth/data/'
+ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/'
 
-songs = ['St Pauls Suite', 'I Love Music', 'Moonlight Sonata', 'Change of the Gaurd','Waltz of Flowers','The Bird', 'Island', 'Allegro Moderato', 'Finlandia', 'Early Summer', 'Capriccio Espagnole', 'Symphony Fantastique', 'Boogie Stop Shuffle', 'My Favorite Things', 'Blue Monk','All Blues']
+song_number = int(sys.argv[1]) - 1
+
+songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Gaurd','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
+
+durs = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135]) 
+
+human_bounds = np.load(ann_dirs + songs[song_number] + '/' + songs[song_number] + '_beh_seg.npy')
+
+human_bounds = np.append(0,np.append(human_bounds,durs[song_number])) 
+
+song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
 
 # Load in data
 train = np.nan_to_num(stats.zscore(np.load(datadir + 'precuneus_k12ish_run1_n25.npy'),axis=1,ddof=1))
@@ -27,7 +39,7 @@ for i in range(0,train.shape[2]):
 
 # Initialize model
 print('Building Model')
-srm = SRM(n_iter=10, features=10)
+srm = SRM(n_iter=10, features=25)
 
 # Fit model to training data (run 1)
 print('Training Model')
@@ -38,20 +50,22 @@ print('Testing Model')
 shared_data = srm.transform(test_list)
 
 avg_response = sum(shared_data)/len(shared_data)
-human_bounds = np.cumsum(np.load(datadir + 'songs2Dur.npy'))[:-1]
-human_bounds2 = np.array([0, 11,  22,  32,  57,  78, 101, 110, 123, 146, 167, 202, 212,225])
+
+# Get start and end of chosen song
+start = song_bounds[song_number]
+end = song_bounds[song_number + 1]
 
 nR = shared_data[0].shape[0]
-nTR = shared_data[0][:,1839:2063].shape[1]
+nTR = shared_data[0][:,start:end].shape[1]
 nSubj = len(shared_data)
 
-ev = brainiak.eventseg.event.EventSegment(14)
-ev.fit(avg_response[:,1839:2063].T)
+ev = brainiak.eventseg.event.EventSegment(len(human_bounds) - 1)
+ev.fit(avg_response[:,start:end].T)
 
 bounds = np.where(np.diff(np.argmax(ev.segments_[0], axis=1)))[0]
 
 plt.figure(figsize=(10,10))
-plt.imshow(np.corrcoef(avg_response[:,1839:2063].T))
+plt.imshow(np.corrcoef(avg_response[:,start:end].T))
 plt.colorbar()
 ax = plt.gca()
 bounds_aug = np.concatenate(([0],bounds,[nTR]))
@@ -59,11 +73,13 @@ for i in range(len(bounds_aug)-1):
     rect1 = patches.Rectangle((bounds_aug[i],bounds_aug[i]),bounds_aug[i+1]-bounds_aug[i],bounds_aug[i+1]-bounds_aug[i],linewidth=3,edgecolor='w',facecolor='none',label='Model Fit')
     ax.add_patch(rect1)
 
-for i in range(len(human_bounds2)-1):
-    rect2 = patches.Rectangle((human_bounds2[i],human_bounds2[i]),human_bounds2[i+1]-human_bounds2[i],human_bounds2[i+1]-human_bounds2[i],linewidth=3,edgecolor='k',facecolor='none',label='Human Annotations')
+for i in range(len(human_bounds)-1):
+    rect2 = patches.Rectangle((human_bounds[i],human_bounds[i]),human_bounds[i+1]-human_bounds[i],human_bounds[i+1]-human_bounds[i],linewidth=3,edgecolor='k',facecolor='none',label='Human Annotations')
     ax.add_patch(rect2)
 
-plt.title('HMM Fit to AG',fontsize=18,fontweight='bold')
+song_titles = ['St Pauls Suite', 'I Love Music', 'Moonlight Sonata', 'Change of the Guard','Waltz of Flowers','The Bird', 'Island', 'Allegro Moderato', 'Finlandia', 'Early Summer', 'Capriccio Espagnole', 'Symphony Fantastique', 'Boogie Stop Shuffle', 'My Favorite Things', 'Blue Monk','All Blues']
+
+plt.title('HMM Fit to Precuneus for ' + song_titles[song_number],fontsize=18,fontweight='bold')
 plt.xlabel('TRs',fontsize=18,fontweight='bold')
 plt.ylabel('TRs',fontsize=18,fontweight='bold')
 #plt.legend(handles=[rect1,rect2])
