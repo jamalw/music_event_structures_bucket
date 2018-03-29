@@ -14,7 +14,6 @@ song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2
 
 songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
-k_sweeper = [4]
 loo_idx = int(sys.argv[1])
 song_idx = int(sys.argv[2])
 subj = subjs[int(loo_idx)]
@@ -24,6 +23,8 @@ datadir = '/jukebox/norman/jamalw/MES/'
 mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
+
+human_bounds = np.load(datadir + 'prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + songs[song_idx] + '/' + songs[song_idx] + '_beh_seg.npy') + 5
 
 def searchlight(coords,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds):
     
@@ -102,7 +103,7 @@ def HMM(X,human_bounds,loo_idx,song_idx,song_bounds):
 
     """
     
-    w = 5
+    w = 3
     nPerm = 1000
     run1 = [X[i] for i in np.arange(0, int(len(X)/2))]
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
@@ -118,6 +119,7 @@ def HMM(X,human_bounds,loo_idx,song_idx,song_bounds):
     nTR = loo.shape[1]
 
     # Fit to all but one subject
+    K = len(human_bounds) + 1
     ev = brainiak.eventseg.event.EventSegment(K)
     ev.fit(others[:,song_bounds[song_idx]:song_bounds[song_idx + 1]].T)
     bounds = np.where(np.diff(np.argmax(ev.segments_[0],axis=1)))[0] 
@@ -155,8 +157,8 @@ for j in range(voxmean.shape[1]):
     results3d_perms[mask>0,j] = voxmean[:,j]
  
 print('Saving ' + subj + ' to Searchlight Folder')
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/real/globals_loo_' + subj + '_K_real' + str(i), results3d_real)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K' + str(i), results3d)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms' + str(i), results3d_perms)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/raw/globals_loo_' + subj + '_K_raw' + str(i), results3d_real)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K' + str(i), results3d)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms' + str(i), results3d_perms)
 
 
