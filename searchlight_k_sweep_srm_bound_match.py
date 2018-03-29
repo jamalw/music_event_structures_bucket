@@ -25,7 +25,7 @@ mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
-def searchlight(coords,K,mask,loo_idx,subjs,song_idx,song_bounds):
+def searchlight(coords,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds):
     
     """run searchlight 
 
@@ -68,7 +68,7 @@ def searchlight(coords,K,mask,loo_idx,subjs,song_idx,song_bounds):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    data.append(np.nan_to_num(stats.zscore(subj_data[:,:,1],axis=1,ddof=1))) 
                print("Running Searchlight")
-               SL_match = HMM(data,K,loo_idx,song_idx,song_bounds)
+               SL_match = HMM(data,human_bounds,loo_idx,song_idx,song_bounds)
                SL_results.append(SL_match)
                SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0], nPerm+1))
@@ -82,7 +82,7 @@ def searchlight(coords,K,mask,loo_idx,subjs,song_idx,song_bounds):
         vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1) 
     return vox_z,voxmean
 
-def HMM(X,K,loo_idx,song_idx,song_bounds):
+def HMM(X,human_bounds,loo_idx,song_idx,song_bounds):
     
     """fit hidden markov model
   
@@ -135,29 +135,28 @@ def HMM(X,K,loo_idx,song_idx,song_bounds):
     return match
 
 
-for i in k_sweeper:
-    # initialize data stores
-    global_outputs_all = np.zeros((91,109,91))
-    results3d = np.zeros((91,109,91))
-    results3d_real = np.zeros((91,109,91))
-    results3d_perms = np.zeros((91,109,91,1001))
-    # create coords matrix
-    x,y,z = np.mgrid[[slice(dm) for dm in tuple((91,109,91))]]
-    x = np.reshape(x,(x.shape[0]*x.shape[1]*x.shape[2]))
-    y = np.reshape(y,(y.shape[0]*y.shape[1]*y.shape[2]))
-    z = np.reshape(z,(z.shape[0]*z.shape[1]*z.shape[2]))
-    coords = np.vstack((x,y,z)).T 
-    coords_mask = coords[mask_reshape>0]
-    print('Running Distribute...')
-    voxmean,real_sl_scores = searchlight(coords_mask,i,mask,loo_idx,subjs,song_idx,song_bounds) 
-    results3d[mask>0] = voxmean[:,0]
-    results3d_real[mask>0] = real_sl_scores[:,0]
-    for j in range(voxmean.shape[1]):
-        results3d_perms[mask>0,j] = voxmean[:,j]
+# initialize data stores
+global_outputs_all = np.zeros((91,109,91))
+results3d = np.zeros((91,109,91))
+results3d_real = np.zeros((91,109,91))
+results3d_perms = np.zeros((91,109,91,1001))
+# create coords matrix
+x,y,z = np.mgrid[[slice(dm) for dm in tuple((91,109,91))]]
+x = np.reshape(x,(x.shape[0]*x.shape[1]*x.shape[2]))
+y = np.reshape(y,(y.shape[0]*y.shape[1]*y.shape[2]))
+z = np.reshape(z,(z.shape[0]*z.shape[1]*z.shape[2]))
+coords = np.vstack((x,y,z)).T 
+coords_mask = coords[mask_reshape>0]
+print('Running Distribute...')
+voxmean,real_sl_scores = searchlight(coords_mask,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds) 
+results3d[mask>0] = voxmean[:,0]
+results3d_real[mask>0] = real_sl_scores[:,0]
+for j in range(voxmean.shape[1]):
+    results3d_perms[mask>0,j] = voxmean[:,j]
  
-    print('Saving ' + subj + ' to Searchlight Folder')
-    np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/real/globals_loo_' + subj + '_K_real' + str(i), results3d_real)
-    np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K' + str(i), results3d)
-    np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms' + str(i), results3d_perms)
+print('Saving ' + subj + ' to Searchlight Folder')
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/real/globals_loo_' + subj + '_K_real' + str(i), results3d_real)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K' + str(i), results3d)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms' + str(i), results3d_perms)
 
 
