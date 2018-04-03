@@ -14,8 +14,9 @@ datadir = '/jukebox/norman/jamalw/MES/'
 mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
+set_srm = int(sys.argv[1])
 
-def searchlight(coords,mask,subjs):
+def searchlight(coords,mask,subjs,set_srm):
     
     """run searchlight 
 
@@ -56,7 +57,7 @@ def searchlight(coords,mask,subjs):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    data.append(np.nan_to_num(stats.zscore(subj_data[:,:,1],axis=1,ddof=1))) 
                print("Running Searchlight")
-               SL_isc_mean_results, SL_isc_results = isc_srm(data)
+               SL_isc_mean_results, SL_isc_results = isc_srm(data,set_srm)
                voxISC[SL_vox] = SL_isc_results
                SL_results.append(SL_isc_mean_results)
                SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
@@ -69,7 +70,7 @@ def searchlight(coords,mask,subjs):
     
     return voxmean, voxISC
 
-def isc_srm(X):
+def isc_srm(X,set_srm):
     
     """perform isc on srm searchlights
 
@@ -86,19 +87,26 @@ def isc_srm(X):
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
     data = np.zeros((run1[0].shape[0],run1[0].shape[1]*2,len(run1)))
     
-    for i in range(data.shape[2]):
-        data[:,:,i] = np.hstack((run1[i],run2[i])) 
-#    # train on run 1 and test on run 2     
-#    print('Building Model')
-#    srm = SRM(n_iter=10, features=5)   
-#    print('Training Model')
-#    srm.fit(run1)
-#    print('Testing Model')
-#    shared_data = srm.transform(run2)
-#    shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
+    if set_srm == 0:
+        for i in range(data.shape[2]):
+            data[:,:,i] = np.hstack((run1[i],run2[i])) 
+        # run isc
+        isc_output = isc(data)
+    elif set_srm == 1:
+        # train on run 1 and test on run 2     
+        print('Building Model')
+        srm = SRM(n_iter=10, features=5)   
+        print('Training Model')
+        srm.fit(run1)
+        print('Testing Model')
+        shared_data = srm.transform(run2)
+        shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
+        # run isc
+        isc_output = isc(shared_data)
+        print(isc_output)
+       
+    # average isc results
     
-    # run isc
-    isc_output = isc(data)   
     mean_isc = np.mean(isc_output)
  
     return mean_isc,isc_output
@@ -117,7 +125,7 @@ z = np.reshape(z,(z.shape[0]*z.shape[1]*z.shape[2]))
 coords = np.vstack((x,y,z)).T 
 coords_mask = coords[mask_reshape>0]
 print('Running Distribute...')
-voxmean,voxISC = searchlight(coords_mask,mask,subjs) 
+voxmean,voxISC = searchlight(coords_mask,mask,subjs,set_srm) 
 mean_results3d[mask>0] = voxmean
 results3d[mask>0] = voxISC
 
