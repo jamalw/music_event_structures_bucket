@@ -55,8 +55,8 @@ def searchlight(coords,mask,subjs):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    data.append(np.nan_to_num(stats.zscore(subj_data[:,:,1],axis=1,ddof=1))) 
                print("Running Searchlight")
-               SL_isc_results = isc_srm(data)
-               SL_results.append(SL_isc_results)
+               SL_isc_mean_results, SL_isc_results = isc_srm(data)
+               SL_results.append(SL_isc_mean_results)
                SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0]))
     vox_SLcount = np.zeros(coords.shape[0])
@@ -92,9 +92,10 @@ def isc_srm(X):
     shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
     
     # run isc
-    isc_output = np.mean(isc(shared_data))   
+    isc_output = isc(shared_data)   
+    mean_isc = np.mean(isc_output)
  
-    return isc_output
+    return mean_isc,isc_output
 
 
 # initialize data stores
