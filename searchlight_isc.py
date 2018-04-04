@@ -58,7 +58,9 @@ def searchlight(coords,mask,subjs,set_srm):
                    data.append(np.nan_to_num(stats.zscore(subj_data[:,:,1],axis=1,ddof=1))) 
                print("Running Searchlight")
                SL_isc_mean_results, SL_isc_results = isc_srm(data,set_srm)
-               voxISC[SL_vox] = SL_isc_results
+               if set_srm == 0:
+                   voxISC[SL_vox] = SL_isc_results
+
                SL_results.append(SL_isc_mean_results)
                SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0]))
