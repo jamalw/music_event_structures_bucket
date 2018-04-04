@@ -16,7 +16,7 @@ ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_o
 
 song_number = int(sys.argv[1]) - 1
 
-songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Gaurd','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
+songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
 durs = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135]) 
 
@@ -43,9 +43,11 @@ for i in range(0,train.shape[2]):
     train_list.append(train[:,:,i])
     test_list.append(test[:,:,i])
 
+n_iter = 100
+features = 50
 # Initialize model
 print('Building Model')
-srm = SRM(n_iter=10, features=25)
+srm = SRM(n_iter=n_iter, features=features)
 
 # Fit model to training data (run 1)
 print('Training Model')
@@ -81,10 +83,12 @@ for i in range(len(human_bounds)-1):
 
 song_titles = ['St Pauls Suite', 'I Love Music', 'Moonlight Sonata', 'Change of the Guard','Waltz of Flowers','The Bird', 'Island', 'Allegro Moderato', 'Finlandia', 'Early Summer', 'Capriccio Espagnole', 'Symphony Fantastique', 'Boogie Stop Shuffle', 'My Favorite Things', 'Blue Monk','All Blues']
 
-plt.title('HMM Fit to Precuneus for ' + song_titles[song_number],fontsize=18,fontweight='bold')
+plt.title('HMM Fit to left mPFC for ' + song_titles[song_number],fontsize=18,fontweight='bold')
 plt.xlabel('TRs',fontsize=18,fontweight='bold')
 plt.ylabel('TRs',fontsize=18,fontweight='bold')
 plt.legend(handles=[rect1,rect2])
+
+plt.savefig('plots/' + songs[song_number] + '_srm_k_' + str(features) + '_iter_' + str(n_iter))
 
 #for i in range(len(human_bounds2)-1):
 #    plt.figure(i+1)

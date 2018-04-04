@@ -14,7 +14,7 @@ song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2
 
 songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
-k_sweeper = [5,6,7]
+k_sweeper = [3]
 loo_idx = int(sys.argv[1])
 song_idx = int(sys.argv[2])
 subj = subjs[int(loo_idx)]

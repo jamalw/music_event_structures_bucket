@@ -75,3 +75,9 @@ for i in range(len(all_songs_indexes)):
 #out = csv.writer(open("beh_peaks.csv","w"), delimiter=',',quoting=csv.QUOTE_ALL)
 #out.writerow(all_songs_indexes)
 
+songs_fn = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
+
+for i in range(len(songs_fn)):
+    np.save(datadir + 'searchlight_output/HMM_searchlight_K_sweep_srm/' + songs_fn[i] + '/' + songs_fn[i] + '_beh_seg',all_songs_indexes[i][0])    
+
+

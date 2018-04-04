@@ -157,8 +157,8 @@ for j in range(voxmean.shape[1]):
     results3d_perms[mask>0,j] = voxmean[:,j]
  
 print('Saving ' + subj + ' to Searchlight Folder')
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/raw/globals_loo_' + subj + '_K_raw' + str(i), results3d_real)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K' + str(i), results3d)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms' + str(i), results3d_perms)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/raw/globals_loo_' + subj + '_K_raw', results3d_real)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K', results3d)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms', results3d_perms)
 
 

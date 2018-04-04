@@ -13,8 +13,8 @@ import nibabel as nib
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/chris_dartmouth/data/'
 
 # Load in data
-train = np.nan_to_num(stats.zscore(np.load(datadir + 'vmPFC_point1_run1_n25.npy'),axis=1,ddof=1))
-test = np.nan_to_num(stats.zscore(np.load(datadir + 'vmPFC_point1_run2_n25.npy'),axis=1,ddof=1))
+train = np.nan_to_num(stats.zscore(np.load(datadir + 'precuneus_k12ish_run1_n25.npy'),axis=1,ddof=1))
+test = np.nan_to_num(stats.zscore(np.load(datadir + 'precuneus_k12ish_run2_n25.npy'),axis=1,ddof=1))
 
 # Convert data into lists where each element is voxels by samples
 train_list = []
