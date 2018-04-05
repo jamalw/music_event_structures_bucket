@@ -57,10 +57,7 @@ def searchlight(coords,mask,subjs,set_srm):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    data.append(np.nan_to_num(stats.zscore(subj_data[:,:,1],axis=1,ddof=1))) 
                print("Running Searchlight")
-               SL_isc_mean_results, SL_isc_results = isc_srm(data,set_srm)
-               if set_srm == 0:
-                   voxISC[SL_vox] = SL_isc_results
-
+               SL_isc_mean_results = isc_srm(data,set_srm)
                SL_results.append(SL_isc_mean_results)
                SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0]))
@@ -70,7 +67,7 @@ def searchlight(coords,mask,subjs,set_srm):
        vox_SLcount[SL_allvox[sl]] += 1
     voxmean = voxmean / vox_SLcount[:,np.newaxis]
     
-    return voxmean, voxISC
+    return voxmean
 
 def isc_srm(X,set_srm):
     
@@ -112,7 +109,7 @@ def isc_srm(X,set_srm):
     
     mean_isc = np.mean(isc_output)
  
-    return mean_isc,isc_output
+    return mean_isc
 
 
 # initialize data stores
@@ -128,12 +125,10 @@ z = np.reshape(z,(z.shape[0]*z.shape[1]*z.shape[2]))
 coords = np.vstack((x,y,z)).T 
 coords_mask = coords[mask_reshape>0]
 print('Running Distribute...')
-voxmean,voxISC = searchlight(coords_mask,mask,subjs,set_srm) 
+voxmean  = searchlight(coords_mask,mask,subjs,set_srm) 
 mean_results3d[mask>0] = voxmean
-results3d[mask>0] = voxISC
 
 print('Saving ' + subj + ' to Searchlight Folder')
 np.save('/scratch/jamalw/ISC_results/spatial_isc/spatial_isc_avg_rmap', mean_results3d)
-np.save('/scratch/jamalw/ISC_results/spatial_isc/spatial_isc_rmap', results3d)
 
 
