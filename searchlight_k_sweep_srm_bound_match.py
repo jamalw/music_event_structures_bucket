@@ -49,7 +49,7 @@ def searchlight(coords,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds):
 
     stride = 5
     radius = 5
-    min_vox = 10
+    min_vox = 30
     nPerm = 1000
     SL_allvox = []
     SL_results = []
@@ -69,9 +69,11 @@ def searchlight(coords,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    data.append(np.nan_to_num(stats.zscore(subj_data[:,:,1],axis=1,ddof=1))) 
                print("Running Searchlight")
-               SL_match = HMM(data,human_bounds,loo_idx,song_idx,song_bounds)
-               SL_results.append(SL_match)
-               SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
+               # only run function on searchlights with voxels greater than or equal to min_vox
+               if data[0].shape[0] >= min_vox: 
+                   SL_match = HMM(data,human_bounds,loo_idx,song_idx,song_bounds)
+                   SL_results.append(SL_match)
+                   SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0], nPerm+1))
     vox_SLcount = np.zeros(coords.shape[0])
     for sl in range(len(SL_results)):
@@ -108,7 +110,7 @@ def HMM(X,human_bounds,loo_idx,song_idx,song_bounds):
     run1 = [X[i] for i in np.arange(0, int(len(X)/2))]
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
     print('Building Model')
-    srm = SRM(n_iter=10, features=5)   
+    srm = SRM(n_iter=10, features=30)   
     print('Training Model')
     srm.fit(run1)
     print('Testing Model')
