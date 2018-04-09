@@ -65,7 +65,9 @@ def searchlight(coords,mask,subjs,set_srm):
     for sl in range(len(SL_results)):
        voxmean[SL_allvox[sl]] += SL_results[sl]
        vox_SLcount[SL_allvox[sl]] += 1
-    voxmean = voxmean / vox_SLcount[:,np.newaxis]
+    print("Voxmean: ",voxmean.shape)
+    print("vox_SLcount: ", vox_SLcount)
+    voxmean = voxmean / vox_SLcount
     
     return voxmean
 
