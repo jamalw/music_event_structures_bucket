@@ -117,8 +117,8 @@ def isc_srm(X,set_srm):
 # initialize data stores
 global_outputs_all = np.zeros((91,109,91))
 results3d = np.zeros((91,109,91))
-results3d_real = np.zeros((91,109,91))
-results3d_perms = np.zeros((91,109,91,1001))
+mean_results3d = np.zeros((91,109,91))
+
 # create coords matrix
 x,y,z = np.mgrid[[slice(dm) for dm in tuple((91,109,91))]]
 x = np.reshape(x,(x.shape[0]*x.shape[1]*x.shape[2]))
