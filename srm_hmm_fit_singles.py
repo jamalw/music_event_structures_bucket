@@ -20,21 +20,21 @@ songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Gu
 
 durs = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135]) 
 
+hrf = 5
+
 human_bounds = np.load(ann_dirs + songs[song_number] + '/' + songs[song_number] + '_beh_seg.npy')
 
 human_bounds = np.append(0,np.append(human_bounds,durs[song_number])) 
 
 song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
 
-hrf = 3
-
 # Get start and end of chosen song
 start = song_bounds[song_number] + hrf
 end = song_bounds[song_number + 1] + hrf
 
 # Load in data
-train = np.nan_to_num(stats.zscore(np.load(datadir + 'A1_run1_n25.npy'),axis=1,ddof=1))
-test = np.nan_to_num(stats.zscore(np.load(datadir + 'A1_run2_n25.npy'),axis=1,ddof=1))
+train = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_bilateral_mpfc_run1_n25.npy'),axis=1,ddof=1))
+test = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_bilateral_mpfc_run2_n25.npy'),axis=1,ddof=1))
 
 # Convert data into lists where each element is voxels by samples
 train_list = []
@@ -43,8 +43,8 @@ for i in range(0,train.shape[2]):
     train_list.append(train[:,:,i])
     test_list.append(test[:,:,i])
 
-n_iter = 100
-features = 50
+n_iter = 50
+features = 10
 # Initialize model
 print('Building Model')
 srm = SRM(n_iter=n_iter, features=features)
@@ -83,7 +83,7 @@ for i in range(len(human_bounds)-1):
 
 song_titles = ['St Pauls Suite', 'I Love Music', 'Moonlight Sonata', 'Change of the Guard','Waltz of Flowers','The Bird', 'Island', 'Allegro Moderato', 'Finlandia', 'Early Summer', 'Capriccio Espagnole', 'Symphony Fantastique', 'Boogie Stop Shuffle', 'My Favorite Things', 'Blue Monk','All Blues']
 
-plt.title('HMM Fit to left mPFC for ' + song_titles[song_number],fontsize=18,fontweight='bold')
+plt.title('HMM Fit to mPFC for ' + song_titles[song_number],fontsize=18,fontweight='bold')
 plt.xlabel('TRs',fontsize=18,fontweight='bold')
 plt.ylabel('TRs',fontsize=18,fontweight='bold')
 plt.legend(handles=[rect1,rect2])
