@@ -117,8 +117,6 @@ def isc_srm(X,set_srm):
 # initialize data stores
 global_outputs_all = np.zeros((91,109,91))
 results3d = np.zeros((91,109,91))
-results3d_real = np.zeros((91,109,91))
-results3d_perms = np.zeros((91,109,91,1001))
 # create coords matrix
 x,y,z = np.mgrid[[slice(dm) for dm in tuple((91,109,91))]]
 x = np.reshape(x,(x.shape[0]*x.shape[1]*x.shape[2]))
@@ -128,9 +126,9 @@ coords = np.vstack((x,y,z)).T
 coords_mask = coords[mask_reshape>0]
 print('Running Distribute...')
 voxmean  = searchlight(coords_mask,mask,subjs,set_srm) 
-mean_results3d[mask>0] = voxmean
+results3d[mask>0] = voxmean
 
 print('Saving ' + subj + ' to Searchlight Folder')
-np.save('/scratch/jamalw/ISC_results/spatial_isc/spatial_isc_avg_rmap', mean_results3d)
+np.save('/scratch/jamalw/ISC_results/spatial_isc/spatial_isc_avg_rmap', results3d)
 
 
