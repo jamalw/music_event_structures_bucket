@@ -131,7 +131,7 @@ voxmean,voxISC = searchlight(coords_mask,mask,subjs,set_srm)
 mean_results3d[mask>0] = voxmean
 results3d[mask>0] = voxISC
 
-print('Saving ' + subj + ' to Searchlight Folder')
+print('Saving to Searchlight Folder')
 np.save('/scratch/jamalw/ISC_results/temporal_isc/tmp_isc_avg_rmap', mean_results3d)
 np.save('/scratch/jamalw/ISC_results/temporal_isc/tmp_isc_rmap', results3d)
 

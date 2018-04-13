@@ -128,7 +128,7 @@ print('Running Distribute...')
 voxmean  = searchlight(coords_mask,mask,subjs,set_srm) 
 results3d[mask>0] = voxmean
 
-print('Saving ' + subj + ' to Searchlight Folder')
+print('Saving to Searchlight Folder')
 np.save('/scratch/jamalw/ISC_results/spatial_isc/spatial_isc_avg_rmap', results3d)
 
 
