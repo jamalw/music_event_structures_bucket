@@ -14,18 +14,16 @@ song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2
 
 songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
-k_sweeper = [3]
-loo_idx = int(sys.argv[1])
-song_idx = int(sys.argv[2])
-subj = subjs[int(loo_idx)]
-print('Subj: ', subj)
+K = 3
+song_idx = int(sys.argv[1])
+n_folds = 10
 
 datadir = '/jukebox/norman/jamalw/MES/'
 mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
-def searchlight(coords,K,mask,loo_idx,subjs,song_idx,song_bounds):
+def searchlight(coords,K,mask,song_idx,song_bounds):
     
     """run searchlight 
 
@@ -68,7 +66,7 @@ def searchlight(coords,K,mask,loo_idx,subjs,song_idx,song_bounds):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    data.append(np.nan_to_num(stats.zscore(subj_data[:,:,1],axis=1,ddof=1))) 
                print("Running Searchlight")
-               SL_within_across = HMM(data,K,loo_idx,song_idx,song_bounds)
+               SL_within_across = HMM(data,K,song_idx,song_bounds)
                SL_results.append(SL_within_across)
                SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0], nPerm+1))
@@ -82,7 +80,7 @@ def searchlight(coords,K,mask,loo_idx,subjs,song_idx,song_bounds):
         vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1) 
     return vox_z,voxmean
 
-def HMM(X,K,loo_idx,song_idx,song_bounds):
+def HMM(X,K,song_idx,song_bounds):
     
     """fit hidden markov model
   
@@ -108,7 +106,7 @@ def HMM(X,K,loo_idx,song_idx,song_bounds):
     run1 = [X[i] for i in np.arange(0, int(len(X)/2))]
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
     print('Building Model')
-    srm = SRM(n_iter=10, features=5)   
+    srm = SRM(n_iter=10, features=30)   
     print('Training Model')
     srm.fit(run1)
     print('Testing Model')
@@ -142,7 +140,7 @@ def HMM(X,K,loo_idx,song_idx,song_bounds):
     return within_across
 
 
-for i in k_sweeper:
+for i in range(n_folds):
     # create coords matrix
     global_outputs_all = np.zeros((91,109,91))
     results3d = np.zeros((91,109,91))
@@ -155,7 +153,7 @@ for i in k_sweeper:
     coords = np.vstack((x,y,z)).T 
     coords_mask = coords[mask_reshape>0]
     print('Running Distribute...')
-    vox_z,raw_wVa_scores = searchlight(coords_mask,i,mask,loo_idx,subjs,song_idx,song_bounds) 
+    vox_z,raw_wVa_scores = searchlight(coords_mask,K,mask,song_idx,song_bounds) 
     results3d[mask>0] = vox_z[:,0]
     results3d_real[mask>0] = raw_wVa_scores[:,0]
     for j in range(vox_z.shape[1]):
