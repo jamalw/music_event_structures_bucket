@@ -17,6 +17,7 @@ songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Gu
 K = 3
 song_idx = int(sys.argv[1])
 n_folds = 10
+#np.random.permutation(subjs)
 
 datadir = '/jukebox/norman/jamalw/MES/'
 mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
