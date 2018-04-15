@@ -16,7 +16,7 @@ songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Gu
 
 K = 3
 song_idx = int(sys.argv[1])
-n_folds = 10
+n_folds = 5
 
 datadir = '/jukebox/norman/jamalw/MES/'
 mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
@@ -148,9 +148,9 @@ def HMM(X,K,song_idx,song_bounds):
 
 for i in range(n_folds):
     # create coords matrix
-    results3d = np.zeros((91,109,91,n_folds))
-    results3d_real = np.zeros((91,109,91,n_folds))
-    results3d_perms = np.zeros((91,109,91,1001,n_folds))
+    results3d = np.zeros((91,109,91))
+    results3d_real = np.zeros((91,109,91))
+    results3d_perms = np.zeros((91,109,91,1001))
     x,y,z = np.mgrid[[slice(dm) for dm in tuple((91,109,91))]]
     x = np.reshape(x,(x.shape[0]*x.shape[1]*x.shape[2]))
     y = np.reshape(y,(y.shape[0]*y.shape[1]*y.shape[2]))
@@ -170,12 +170,12 @@ for i in range(n_folds):
     results4d_real[:,:,:,i] += results3d_real/n_folds
     for j in range(vox_z.shape[1]):
         results3d_perms[mask>0,j] = vox_z[:,j]
-    results4d_perms += results3d_perms/n_folds
+    results4d_perms[:,:,:,:,i] += results3d_perms/n_folds
 
 # save results 
-print('Saving ' + subj + ' to Searchlight Folder')
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/real/globals_loo_' + subj + '_K_real' + str(i), results4d_real)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K' + str(i), results4d)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms' + str(i), results4d_perms)
+print('Saving to Searchlight Folders')
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/raw/globals_K_raw' + str(i), results4d_real)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/zscores/globals_K_zscores' + str(i), results4d)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/perms/globals_K_perms' + str(i), results4d_perms)
 
 
