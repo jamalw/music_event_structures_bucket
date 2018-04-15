@@ -17,14 +17,17 @@ songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Gu
 K = 3
 song_idx = int(sys.argv[1])
 n_folds = 10
-#np.random.permutation(subjs)
 
 datadir = '/jukebox/norman/jamalw/MES/'
 mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
-def searchlight(coords,K,mask,song_idx,song_bounds):
+results4d = np.zeros((91,109,91,n_folds))
+results4d_real = np.zeros((91,109,91,n_folds))
+results4d_perms = np.zeros((91,109,91,1001,n_folds)) 
+
+def searchlight(coords,K,mask,song_idx,song_bounds,subjs):
     
     """run searchlight 
 
@@ -47,7 +50,7 @@ def searchlight(coords,K,mask,song_idx,song_bounds):
 
     stride = 5
     radius = 5
-    min_vox = 10
+    min_vox = 30
     nPerm = 1000
     SL_allvox = []
     SL_results = []
@@ -67,9 +70,11 @@ def searchlight(coords,K,mask,song_idx,song_bounds):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    data.append(np.nan_to_num(stats.zscore(subj_data[:,:,1],axis=1,ddof=1))) 
                print("Running Searchlight")
-               SL_within_across = HMM(data,K,song_idx,song_bounds)
-               SL_results.append(SL_within_across)
-               SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
+               # only run function on searchlights with #of voxels greater than or equal to min_vox
+               if data[0].shape[0] >= min_vox:
+                   SL_within_across = HMM(data,K,song_idx,song_bounds)
+                   SL_results.append(SL_within_across)
+                   SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0], nPerm+1))
     vox_SLcount = np.zeros(coords.shape[0])
     for sl in range(len(SL_results)):
@@ -85,19 +90,19 @@ def HMM(X,K,song_idx,song_bounds):
     
     """fit hidden markov model
   
-       Fit HMM to average data and cross-validate with leftout subject using within song and between song average correlations              
+       Fit HMM to average data and cross-validate with leftout subjects using within song and between song average correlations              
 
        Parameters
        ----------
-       A: voxel by time ndarray (2D)
-       B: voxel by time ndarray (2D)
+       A: list of 50 (contains 2 runs per subject) 2D (voxels x full time course) arrays
+       B: # of events for HMM (scalar)
+       song_idx: song index (scalar)
        C: voxel by time ndarray (2D)
-       D: voxel by time ndarray (2D)
-       K: # of events for HMM (scalar)
+       D: array of song boundaries (1D)
  
        Returns
        -------
-       z: z-score after performing permuted cross-validation analysis      
+       wVa score: final score after performing cross-validation of leftout subjects      
 
     """
     
@@ -113,13 +118,13 @@ def HMM(X,K,song_idx,song_bounds):
     print('Testing Model')
     shared_data = srm.transform(run2)
     shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
-    others = np.mean(shared_data[:,:,np.arange(shared_data.shape[-1]) != loo_idx],axis=2)
-    loo = shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1],loo_idx] 
+    others = np.mean(shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1],:13],axis=2)
+    loo = np.mean(shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1],13:],axis=2) 
     nTR = loo.shape[1]
 
     # Fit to all but one subject
     ev = brainiak.eventseg.event.EventSegment(K)
-    ev.fit(others[:,song_bounds[song_idx]:song_bounds[song_idx + 1]].T)
+    ev.fit(others.T)
     events = np.argmax(ev.segments_[0],axis=1)
 
     # Compute correlations separated by w in time
@@ -137,32 +142,40 @@ def HMM(X,K,song_idx,song_bounds):
         events = np.zeros(nTR, dtype=np.int)
         events[np.random.choice(nTR,K-1,replace=False)] = 1
         events = np.cumsum(events)
-
+    print((within_across[0] - np.mean(within_across[1:]))/np.std(within_across[1:]))
     return within_across
 
 
 for i in range(n_folds):
     # create coords matrix
-    global_outputs_all = np.zeros((91,109,91))
-    results3d = np.zeros((91,109,91))
-    results3d_real = np.zeros((91,109,91))
-    results3d_perms = np.zeros((91,109,91,1001))
+    results3d = np.zeros((91,109,91,n_folds))
+    results3d_real = np.zeros((91,109,91,n_folds))
+    results3d_perms = np.zeros((91,109,91,1001,n_folds))
     x,y,z = np.mgrid[[slice(dm) for dm in tuple((91,109,91))]]
     x = np.reshape(x,(x.shape[0]*x.shape[1]*x.shape[2]))
     y = np.reshape(y,(y.shape[0]*y.shape[1]*y.shape[2]))
     z = np.reshape(z,(z.shape[0]*z.shape[1]*z.shape[2]))
     coords = np.vstack((x,y,z)).T 
     coords_mask = coords[mask_reshape>0]
+    # permute subject IDs
+    np.random.seed(i)
+    subjs = np.random.permutation(subjs)  
+    # prepare to run searchlight
     print('Running Distribute...')
-    vox_z,raw_wVa_scores = searchlight(coords_mask,K,mask,song_idx,song_bounds) 
+    vox_z,raw_wVa_scores = searchlight(coords_mask,K,mask,song_idx,song_bounds,subjs) 
+    # store and average raw scores, z-scores, and permutations
     results3d[mask>0] = vox_z[:,0]
+    results4d[:,:,:,i] += results3d/n_folds
     results3d_real[mask>0] = raw_wVa_scores[:,0]
+    results4d_real[:,:,:,i] += results3d_real/n_folds
     for j in range(vox_z.shape[1]):
         results3d_perms[mask>0,j] = vox_z[:,j]
- 
-    print('Saving ' + subj + ' to Searchlight Folder')
-    np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/real/globals_loo_' + subj + '_K_real' + str(i), results3d_real)
-    np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K' + str(i), results3d)
-    np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms' + str(i), results3d_perms)
+    results4d_perms += results3d_perms/n_folds
+
+# save results 
+print('Saving ' + subj + ' to Searchlight Folder')
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/real/globals_loo_' + subj + '_K_real' + str(i), results4d_real)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K' + str(i), results4d)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms' + str(i), results4d_perms)
 
 
