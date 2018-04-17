@@ -88,8 +88,8 @@ fig, ax1 = plt.subplots()
 
 xp = np.linspace(3,features[-1:],100)
 
-p1 = np.poly1d(np.polyfit(features,mean_z,2))
-ax1.plot(features,mean_z,'.',xp, p1(xp), '-',color='k',linewidth=3,markersize=15)
+p1 = np.poly1d(np.polyfit(features,np.mean(z_scores,axis=1),2))
+ax1.plot(features,np.mean(z_scores,axis=1),'.',xp, p1(xp), '-',color='k',linewidth=3,markersize=15)
 ax1.set_ylabel('average z', color='k', fontsize=18)
 ax1.tick_params(labelsize=15)
 
