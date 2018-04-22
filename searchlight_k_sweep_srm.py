@@ -23,9 +23,9 @@ mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
-results4d = np.zeros((91,109,91,n_folds))
-results4d_real = np.zeros((91,109,91,n_folds))
-results4d_perms = np.zeros((91,109,91,1001,n_folds)) 
+results_z = np.zeros((91,109,91))
+results_real = np.zeros((91,109,91))
+results_perms = np.zeros((91,109,91,1001,n_folds)) 
 
 def searchlight(coords,K,mask,song_idx,song_bounds,subjs):
     
@@ -165,17 +165,17 @@ for i in range(n_folds):
     vox_z,raw_wVa_scores = searchlight(coords_mask,K,mask,song_idx,song_bounds,subjs) 
     # store and average raw scores, z-scores, and permutations
     results3d[mask>0] = vox_z[:,0]
-    results4d[:,:,:,i] += results3d/n_folds
+    results_z[:,:,:] += results3d/n_folds
     results3d_real[mask>0] = raw_wVa_scores[:,0]
-    results4d_real[:,:,:,i] += results3d_real/n_folds
+    results_real[:,:,:] += results3d_real/n_folds
     for j in range(vox_z.shape[1]):
         results3d_perms[mask>0,j] = vox_z[:,j]
-    results4d_perms[:,:,:,:,i] += results3d_perms/n_folds
+    results_perms[:,:,:,:,i] += results3d_perms/n_folds
 
 # save results 
 print('Saving to Searchlight Folders')
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/raw/globals_K_raw' + str(i), results4d_real)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/zscores/globals_K_zscores' + str(i), results4d)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/perms/globals_K_perms' + str(i), results4d_perms)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/raw/globals_K_raw' + str(K), results_real)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/zscores/globals_K_zscores' + str(K), results_z)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm/' + songs[song_idx] +'/perms/globals_K_perms' + str(K), results_perms)
 
 
