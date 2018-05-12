@@ -14,7 +14,7 @@ song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2
 
 songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
-K = 3
+K = 5
 song_idx = int(sys.argv[1])
 n_folds = 5
 
@@ -108,6 +108,7 @@ def HMM(X,K,song_idx,song_bounds):
     
     w = 6
     nPerm = 1000
+    hrf = 5
     within_across = np.zeros(nPerm+1)
     run1 = [X[i] for i in np.arange(0, int(len(X)/2))]
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
@@ -118,8 +119,8 @@ def HMM(X,K,song_idx,song_bounds):
     print('Testing Model')
     shared_data = srm.transform(run2)
     shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
-    others = np.mean(shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1],:13],axis=2)
-    loo = np.mean(shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1],13:],axis=2) 
+    others = np.mean(shared_data[:,song_bounds[song_idx]+hrf:song_bounds[song_idx + 1]+hrf,:13],axis=2)
+    loo = np.mean(shared_data[:,song_bounds[song_idx]+hrf:song_bounds[song_idx + 1]+hrf,13:],axis=2) 
     nTR = loo.shape[1]
 
     # Fit to all but one subject
