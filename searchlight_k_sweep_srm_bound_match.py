@@ -18,6 +18,8 @@ loo_idx = int(sys.argv[1])
 song_idx = int(sys.argv[2])
 subj = subjs[int(loo_idx)]
 print('Subj: ', subj)
+srm_k = 5
+hrf = 5
 
 datadir = '/jukebox/norman/jamalw/MES/'
 mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
@@ -26,7 +28,7 @@ mask_reshape = np.reshape(mask,(91*109*91))
 
 human_bounds = np.load(datadir + 'prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + songs[song_idx] + '/' + songs[song_idx] + '_beh_seg.npy') + 5
 
-def searchlight(coords,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds):
+def searchlight(coords,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds,srm_k,hrf):
     
     """run searchlight 
 
@@ -49,7 +51,7 @@ def searchlight(coords,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds):
 
     stride = 5
     radius = 5
-    min_vox = 30
+    min_vox = 5
     nPerm = 1000
     SL_allvox = []
     SL_results = []
@@ -71,7 +73,7 @@ def searchlight(coords,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds):
                print("Running Searchlight")
                # only run function on searchlights with voxels greater than or equal to min_vox
                if data[0].shape[0] >= min_vox: 
-                   SL_match = HMM(data,human_bounds,loo_idx,song_idx,song_bounds)
+                   SL_match = HMM(data,human_bounds,loo_idx,song_idx,song_bounds,srm_k,hrf)
                    SL_results.append(SL_match)
                    SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0], nPerm+1))
@@ -85,7 +87,7 @@ def searchlight(coords,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds):
         vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1) 
     return vox_z,voxmean
 
-def HMM(X,human_bounds,loo_idx,song_idx,song_bounds):
+def HMM(X,human_bounds,loo_idx,song_idx,song_bounds,srm_k,hrf):
     
     """fit hidden markov model
   
@@ -110,20 +112,20 @@ def HMM(X,human_bounds,loo_idx,song_idx,song_bounds):
     run1 = [X[i] for i in np.arange(0, int(len(X)/2))]
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
     print('Building Model')
-    srm = SRM(n_iter=10, features=30)   
+    srm = SRM(n_iter=10, features=srm_k)   
     print('Training Model')
     srm.fit(run1)
     print('Testing Model')
     shared_data = srm.transform(run2)
     shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
     others = np.mean(shared_data[:,:,np.arange(shared_data.shape[-1]) != loo_idx],axis=2)
-    loo = shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1],loo_idx] 
+    loo = shared_data[:,song_bounds[song_idx] + hrf:song_bounds[song_idx + 1] + hrf,loo_idx] 
     nTR = loo.shape[1]
 
     # Fit to all but one subject
     K = len(human_bounds) + 1
     ev = brainiak.eventseg.event.EventSegment(K)
-    ev.fit(others[:,song_bounds[song_idx]:song_bounds[song_idx + 1]].T)
+    ev.fit(others[:,song_bounds[song_idx] + hrf:song_bounds[song_idx + 1] + hrf].T)
     bounds = np.where(np.diff(np.argmax(ev.segments_[0],axis=1)))[0] 
     match = np.zeros(nPerm+1)
     perm_bounds = bounds.copy()
@@ -152,15 +154,15 @@ z = np.reshape(z,(z.shape[0]*z.shape[1]*z.shape[2]))
 coords = np.vstack((x,y,z)).T 
 coords_mask = coords[mask_reshape>0]
 print('Running Distribute...')
-voxmean,real_sl_scores = searchlight(coords_mask,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds) 
+voxmean,real_sl_scores = searchlight(coords_mask,human_bounds,mask,loo_idx,subjs,song_idx,song_bounds,srm_k,hrf) 
 results3d[mask>0] = voxmean[:,0]
 results3d_real[mask>0] = real_sl_scores[:,0]
-for j in range(voxmean.shape[1]):
-    results3d_perms[mask>0,j] = voxmean[:,j]
+#for j in range(voxmean.shape[1]):
+#    results3d_perms[mask>0,j] = voxmean[:,j]
  
 print('Saving ' + subj + ' to Searchlight Folder')
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/raw/globals_loo_' + subj + '_K_raw', results3d_real)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K', results3d)
-np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms', results3d_perms)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/raw/globals_loo_' + subj + '_K_raw_' + 'srm_k' + str(srm_k), results3d_real)
+np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/zscores/globals_loo_' + subj + '_K_' + 'srm_k' + str(srm_k), results3d)
+#np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms', results3d_perms)
 
 
