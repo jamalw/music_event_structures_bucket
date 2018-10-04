@@ -12,7 +12,7 @@ subjs = ['MES_022817_0','MES_030217_0','MES_032117_1','MES_040217_0','MES_041117
 
 song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
 
-songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_the_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
+songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
 song_idx = int(sys.argv[1])
 srm_k = 5
@@ -111,9 +111,9 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     print('Building Model')
     srm = SRM(n_iter=10, features=srm_k)   
     print('Training Model')
-    srm.fit(run1)
+    srm.fit(run2)
     print('Testing Model')
-    shared_data = srm.transform(run2)
+    shared_data = srm.transform(run1)
     shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
     data = np.mean(shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1]],axis=2)
     nTR = data.shape[1]
@@ -157,8 +157,9 @@ results3d_real[mask>0] = real_sl_scores[:,0]
 #    results3d_perms[mask>0,j] = voxmean[:,j]
  
 print('Saving data to Searchlight Folder')
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run1', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run1', results3d)
+print(songs[song_idx])
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run2', results3d_real)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run2', results3d)
 #np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms', results3d_perms)
 
 
