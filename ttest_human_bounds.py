@@ -54,7 +54,7 @@ def FDR_p(pvals):
     return qvals
 
 for i in range(len(songs)):
-    fn_z = glob.glob(datadir + songs[i] + '/perms/*run1.npy')
+    fn_z = glob.glob(datadir + songs[i] + '/perms/*srmk_30.npy')
     data = np.load(fn_z[0])
     all_songs3D[:,:,:,i] = data[:,:,:,0]
     all_songs1D[:,:,i] = data[mask != 0]
