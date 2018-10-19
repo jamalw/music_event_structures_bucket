@@ -4,10 +4,10 @@ import nibabel as nib
 
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/'
 
-fn = 'globals_avg_all_perm_srm_k30_fit_run1.nii.gz'
+fn = 'pstats_map_both_runs_w_perms.npy'
 
 print("Loading Data")
-zvals = nib.load(datadir + fn).get_data()
+zvals = np.load(datadir + 'ttest_results/'+ fn)
 max_cluster = np.zeros(1000)
 connectivity = 3
 s = generate_binary_structure(3,connectivity)
@@ -50,4 +50,4 @@ maxval = np.max(image[~np.isnan(image)])
 img = nib.Nifti1Image(image, np.eye(4))
 img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
-nib.save(img,datadir + 'cluster_corrected_n25_srm_k30_run_1_corrected_p1')
+nib.save(img,datadir + 'cluster_corrected_srm_k30_both_runs_p1')
