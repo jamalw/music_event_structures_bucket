@@ -16,8 +16,8 @@ for i in range(0,1000):
     print("Copying Data")
     image = zvals.copy()[:,:,:,i+1]
     # use z = 1.96 for p < 0.05 and z = 1.28 for p < 0.1
-    image[zvals[:,:,:,i+1] < 1.28] = 0
-    image[zvals[:,:,:,i+1] >= 1.28] = 1
+    image[zvals[:,:,:,i+1] > 0.1] = 0
+    image[zvals[:,:,:,i+1] <= 0.1] = 1
     larray, nf = label(image,s)
     cluster_sizes = np.unique(larray[larray>0], return_counts=True)[1]
 
@@ -35,8 +35,8 @@ thresh = sorted_max_cluster[int(len(sorted_max_cluster)*0.90)]
 # run clustering on real zvals[:,:,:,0] to get image, larray, cluster_sizes
 # use z=1.28 for p < 0.1 and use z=1.96 for p < 0.05
 image = zvals.copy()[:,:,:,0]
-image[zvals[:,:,:,0] < 1.28] = 0
-image[zvals[:,:,:,0] >= 1.28] = 1
+image[zvals[:,:,:,0] > 0.1] = 0
+image[zvals[:,:,:,0] <= 0.1] = 1
 larray, nf = label(image,s)
 cluster_sizes = np.unique(larray[larray>0], return_counts=True)[1]
 
