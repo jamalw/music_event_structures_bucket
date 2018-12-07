@@ -1,6 +1,7 @@
 import numpy as np
 import nibabel as nib
 import numpy.ma as ma
+from scipy.stats import zscore
 from brainiak.isc import isc
 
 # This script calls the brainiak isc and isfc function to perform full brain isc on music data.
@@ -11,18 +12,18 @@ subjs = ['MES_022817_0','MES_030217_0','MES_040217_0','MES_041117_0','MES_041217
 
 datadir = '/jukebox/norman/jamalw/MES/subjects/'
 
-data_run1 = np.empty((2511,6,len(subjs)))
-data_run2 = np.empty((2511,6,len(subjs)))
+data = np.empty((5022,6,len(subjs)))
 
 # Structure data for brainiak isc function
 for i in range(len(subjs)):
-    data_run1[:,:,i] = np.loadtxt(datadir + subjs[i] + '/data/nifti/EPI_mcf1.par')[0:2511,:]     
-    data_run2[:,:,i] = np.loadtxt(datadir + subjs[i] + '/data/nifti/EPI_mcf2.par')[0:2511,:]     
+    data_run1 = zscore(np.loadtxt(datadir + subjs[i] + '/data/nifti/EPI_mcf1.par')[0:2511,:])     
+    data_run2 = zscore(np.loadtxt(datadir + subjs[i] + '/data/nifti/EPI_mcf2.par')[0:2511,:])     
+    data[:,:,i] = np.vstack((data_run1,data_run2))     
+
     
-iscs_run1 = isc(data_run1, pairwise=False, summary_statistic='mean')
-iscs_run2 = isc(data_run2, pairwise=False, summary_statistic='mean')
+iscs = isc(data, pairwise=False, summary_statistic='mean')
+
 
 #print('Saving ISC Results')
 #save_dir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/isc/motion/'
-#np.save(save_dir + 'motion_isc_run1',iscs_run1)
-#np.save(save_dir + 'motion_isc_run2',iscs_run2)
+#np.save(save_dir + 'motion_isc',iscs)
