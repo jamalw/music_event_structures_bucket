@@ -22,8 +22,7 @@ for i in range(len(subjs)):
 iscs_run1 = isc(data_run1, pairwise=False, summary_statistic='mean')
 iscs_run2 = isc(data_run2, pairwise=False, summary_statistic='mean')
 
-
-#save_dir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/'
 #print('Saving ISC Results')
-#np.save(save_dir + 'full_brain_ISC_run1',ISC1)
-#np.save(save_dir + 'full_brain_ISC_run2',ISC2)
+#save_dir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/isc/motion/'
+#np.save(save_dir + 'motion_isc_run1',iscs_run1)
+#np.save(save_dir + 'motion_isc_run2',iscs_run2)
