@@ -10,12 +10,18 @@ from scipy.spatial import distance
 
 subjs = ['MES_022817_0','MES_030217_0','MES_032117_1','MES_040217_0','MES_041117_0','MES_041217_0','MES_041317_0','MES_041417_0','MES_041517_0','MES_042017_0','MES_042317_0','MES_042717_0','MES_050317_0','MES_051317_0','MES_051917_0','MES_052017_0','MES_052017_1','MES_052317_0','MES_052517_0','MES_052617_0','MES_052817_0','MES_052817_1','MES_053117_0','MES_060117_0','MES_060117_1']
 
-song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
+# run 1 times
+song_bounds = np.array([0,225,314,494,628,718,898,1032,1122,1301,1436,1660,1749,1973, 2198,2377,2511]) 
 
-songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
+songs = ['Finlandia', 'Blue_Monk', 'I_Love_Music','Waltz_of_Flowers','Capriccio_Espagnole','Island','All_Blues','St_Pauls_Suite','Moonlight_Sonata','Symphony_Fantastique','Allegro_Moderato','Change_of_the_Guard','Boogie_Stop_Shuffle','My_Favorite_Things','The_Bird','Early_Summer']
+
+# run 2 times
+#song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
+
+#songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
 song_idx = int(sys.argv[1])
-srm_k = 5
+srm_k = 30
 hrf = 5
 
 datadir = '/jukebox/norman/jamalw/MES/'
@@ -48,7 +54,7 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
 
     stride = 5
     radius = 5
-    min_vox = 5
+    min_vox = srm_k
     nPerm = 1000
     SL_allvox = []
     SL_results = []
@@ -141,7 +147,7 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
 global_outputs_all = np.zeros((91,109,91))
 results3d = np.zeros((91,109,91))
 results3d_real = np.zeros((91,109,91))
-#results3d_perms = np.zeros((91,109,91,1001))
+results3d_perms = np.zeros((91,109,91,1001))
 # create coords matrix
 x,y,z = np.mgrid[[slice(dm) for dm in tuple((91,109,91))]]
 x = np.reshape(x,(x.shape[0]*x.shape[1]*x.shape[2]))
@@ -153,13 +159,13 @@ print('Running Distribute...')
 voxmean,real_sl_scores = searchlight(coords_mask,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf) 
 results3d[mask>0] = voxmean[:,0]
 results3d_real[mask>0] = real_sl_scores[:,0]
-#for j in range(voxmean.shape[1]):
-#    results3d_perms[mask>0,j] = voxmean[:,j]
+for j in range(voxmean.shape[1]):
+    results3d_perms[mask>0,j] = voxmean[:,j]
  
 print('Saving data to Searchlight Folder')
 print(songs[song_idx])
 np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run2', results3d_real)
 np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run2', results3d)
-#np.save('/scratch/jamalw/HMM_searchlight_K_sweep_srm_bound_match/' + songs[song_idx] +'/perms/globals_loo_' + subj + '_K_perms', results3d_perms)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_fit_run2', results3d_perms)
 
 
