@@ -72,6 +72,24 @@ for i in range(0,len(subjs)):
     for j in range(0,len(exp1)):
         reorder1[exp1[j]] = func_sliced1[j][0]
         reorder2[exp2[j]] = func_sliced2[j][0]
+    
+    # save subject data for run 1 to respective song directories 
+    for j in range(0,len(exp1)):
+        min1 = np.min(reorder1[j])
+        max1 = np.max(reorder1[j])
+        img1 = nib.Nifti1Image(reorder1[j],affine=nii_template.affine)
+        img1.header['cal_min'] = min1
+        img1.header['cal_max'] = max1
+        nib.save(img1,MES_dir + 'data/single_song_niftis/' + songs[j] + '/run1/' + subj_format % (i+1) + '.nii.gz') 
+    # save subject data for run 2 to respective song directories 
+    for j in range(0,len(exp1)):
+        min1 = np.min(reorder2[j])
+        max1 = np.max(reorder2[j])
+        img1 = nib.Nifti1Image(reorder2[j],affine=nii_template.affine)
+        img1.header['cal_min'] = min1
+        img1.header['cal_max'] = max1
+        nib.save(img1,MES_dir + 'data/single_song_niftis/' + songs[j] + '/run2/' + subj_format % (i+1) + '.nii.gz') 
+
     # average same songs together and save to respective directory
     for j in range(0,len(exp1)):
         reorder_avg[j] = (reorder1[j]+reorder2[j])/2
@@ -82,7 +100,7 @@ for i in range(0,len(subjs)):
         img1 = nib.Nifti1Image(reorder_avg[j],affine=nii_template.affine)
         img1.header['cal_min'] = min1
         img1.header['cal_max'] = max1
-        nib.save(img1,MES_dir + 'data/single_song_niftis/' + songs[j] + '/' + subj_format % (i+1) + '.nii.gz')        
+        nib.save(img1,MES_dir + 'data/single_song_niftis/' + songs[j] + '/avg/' + subj_format % (i+1) + '.nii.gz')        
 
 
  
