@@ -26,7 +26,7 @@ for i in range(0,len(subjs)):
     subj_regs1 = np.genfromtxt(MES_dir + 'subjects/' + subjs[i] + '/data/nifti/EPI_mcf1.par')
     motion1 = subj_regs1.T
     regr1 = linear_model.LinearRegression()
-    regr1.fit(motion1.T,run1.T)
+    regr1.fit(motion1.T,run1_reshape.T)
     run1 = run1_reshape - np.dot(regr1.coef_, motion1) - regr1.intercept_[:, np.newaxis]
     run1 = np.nan_to_num(stats.zscore(run1,axis=1,ddof=1))
     run1 = np.reshape(run1,(91,109,91,run1_reshape.shape[1]))
@@ -36,7 +36,7 @@ for i in range(0,len(subjs)):
     subj_regs2 = np.genfromtxt(MES_dir + 'subjects/' + subjs[i] + '/data/nifti/EPI_mcf2.par')
     motion2 = subj_regs2.T
     regr2 = linear_model.LinearRegression()
-    regr2.fit(motion2.T,run2.T)
+    regr2.fit(motion2.T,run2_reshape.T)
     run2 = run2_reshape - np.dot(regr2.coef_, motion2) - regr2.intercept_[:, np.newaxis]
     run2 = np.nan_to_num(stats.zscore(run2,axis=1,ddof=1))    
     run2 = np.reshape(run2,(91,109,91,run2_reshape.shape[1]))
