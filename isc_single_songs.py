@@ -12,11 +12,13 @@ songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Gu
 
 datadir = '/jukebox/norman/jamalw/MES/data/single_song_niftis/'
 
+version = 'avg'
+
 song_idx = int(sys.argv[1])
 
-TRs = nib.load(datadir + songs[song_idx] + '/avg/subj1.nii.gz').get_data().shape[3]
+TRs = nib.load(datadir + songs[song_idx] + '/' + version + '/subj1.nii.gz').get_data().shape[3]
 
-fn = glob.glob(datadir + songs[song_idx] + '/avg/*')
+fn = glob.glob(datadir + songs[song_idx] + '/' + version + '/*')
 
 data = np.empty((91*109*91,TRs,len(fn)))
 
@@ -32,4 +34,4 @@ iscs = isc(data, pairwise=False, summary_statistic='mean')
 
 print('Saving ISC Results')
 save_dir = datadir + songs[song_idx] + '/analysis_results/'
-np.save(save_dir + 'avg_isc',iscs)
+np.save(save_dir + version + '_isc',iscs)
