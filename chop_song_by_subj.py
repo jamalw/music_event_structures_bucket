@@ -2,7 +2,7 @@ import numpy as np
 #import soundfile as sf
 import nibabel as nib
 from sklearn import linear_model
-from scipy.stats import zscore
+from scipy import stats
 
 MES_dir = '/jukebox/norman/jamalw/MES/'
 
@@ -20,6 +20,30 @@ songs1Dur = np.load(MES_dir + 'data/' + 'songs1Dur.npy')
 songs2Dur = np.load(MES_dir + 'data/' + 'songs2Dur.npy')
 
 for i in range(0,len(subjs)):
+    # reset all objects to clear memory
+    run1 = []
+    run2 = []
+    run1_reshape = []
+    run2_reshape = []
+    motion1 = []
+    motion2 = []
+    regr1 = []
+    regr2 = []
+    
+    func_sliced1 = []
+    func_sliced2 = []
+    for j in range(0,len(songs1Dur)):
+        func_sliced1.append([])
+        func_sliced2.append([])
+
+    reorder1 = []
+    reorder2 = []
+    reorder_avg = []
+    for j in range(0,len(songs1Dur)):
+        reorder1.append([])
+        reorder2.append([])
+        reorder_avg.append([])
+
     # Load data, reshape data, build model, fit model, subtract residuals, zscore data, reshape data back to original dimensions
     run1 = nib.load(MES_dir + 'subjects/' + subjs[i] + '/analysis/run1.feat/trans_filtered_func_data.nii').get_data()
     run1_reshape = np.reshape(run1,(91*109*91,run1.shape[3]))
@@ -41,14 +65,6 @@ for i in range(0,len(subjs)):
     run2 = np.nan_to_num(stats.zscore(run2,axis=1,ddof=1))    
     run2 = np.reshape(run2,(91,109,91,run2_reshape.shape[1]))
  
-    print("Slicing functional data by song durations...")
-    # slice functional scan according to song durations
-    func_sliced1 = []
-    func_sliced2 = []
-    for j in range(0,len(songs1Dur)):
-        func_sliced1.append([])
-        func_sliced2.append([])
-
     for j in range(0,len(songs1Dur)):
         func_sliced1[j].append(run1[:,:,:,0:int(songs1Dur[j])])
         func_sliced2[j].append(run2[:,:,:,0:int(songs2Dur[j])])
@@ -60,14 +76,6 @@ for i in range(0,len(subjs)):
 
     print("Reordering functional data to match genre model...")
     # reorder func data according to genre model
-    reorder1 = []
-    reorder2 = []
-    reorder_avg = []
-    # create 16 slots
-    for j in range(0,len(exp1)):
-        reorder1.append([])
-        reorder2.append([])
-        reorder_avg.append([])
     # assign successive songs in func_slicedn to respective index in reordern.
     for j in range(0,len(exp1)):
         reorder1[exp1[j]] = func_sliced1[j][0]
