@@ -12,10 +12,21 @@ df2 = pd.read_excel(datadir + 'familiarity_scores.xlsx',"Day 2")
 data1 = df1.as_matrix(columns=df1.columns[0:])
 data2 = df2.as_matrix(columns=df2.columns[0:])
 
+# average over songs leaving one average score per participant
+day1 = np.mean(data1,axis=0)
+day2 = np.mean(data2,axis=0)
+
+subj_avg = (day1 + day2)/2
+grand_avg = np.mean(subj_avg)
+
+# compute normalized responses
+day1_new = day1 - subj_avg + grand_avg
+day2_new = day2 - subj_avg + grand_avg
+
 mean_data1 = np.mean(data1)
 mean_data2 = np.mean(data2)
-sem_data1 = stats.sem(np.reshape(data1,(16*23)))
-sem_data2 = stats.sem(np.reshape(data2,(16*23)))
+sem_data1 = stats.sem(day1_new)
+sem_data2 = stats.sem(day2_new)
 
 all_data_means = np.array([mean_data1,mean_data2])
 all_data_sems = np.array([sem_data1,sem_data2])
@@ -35,4 +46,5 @@ axes.set_ylim([0,5])
 
 plt.savefig('familiarity_fig.png')
 
+t,p = stats.ttest_ind(day1, day2, axis=0, equal_var=True)
 
