@@ -46,5 +46,5 @@ axes.set_ylim([0,5])
 
 plt.savefig('familiarity_fig.png')
 
-t,p = stats.ttest_ind(day1, day2, axis=0, equal_var=True)
+t,p = stats.ttest_rel(day1, day2, axis=0)
 
