@@ -28,7 +28,7 @@ srm_k = 30
 hrf = 5
 
 datadir = '/jukebox/norman/jamalw/MES/'
-mask_img = load_img(datadir + 'data/a1plus_2mm.nii.gz')
+mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
@@ -76,7 +76,7 @@ def searchlight(coords,song_features,mask,subjs,song_idx,song_bounds,srm_k,hrf):
                    motion = subj_regs.T
                    regr = linear_model.LinearRegression()
                    regr.fit(motion[:,0:2511].T,subj_data[:,:,0].T)
-                   subj_data1 = subj_data[:,:,0] - np.dot(regr.coef_, motion[:,0:2511]) - regr.intercept_[:, np.newaxis] 
+                   subj_data1 = subj_data[:,:,0] - np.dot(regr.coef_, motion[:,0:2511]) - regr.intercept_[:, np.newaxis]
                    data.append(np.nan_to_num(stats.zscore(subj_data1,axis=1,ddof=1)))
                for i in range(len(subjs)):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
@@ -129,12 +129,17 @@ def RSA(X,song_features,song_idx,song_bounds,srm_k,hrf):
     print('Building Model')
     srm = SRM(n_iter=10, features=srm_k)   
     print('Training Model')
-    srm.fit(run2)
+    srm.fit(run1)
     print('Testing Model')
-    shared_data = srm.transform(run1)
+    shared_data = srm.transform(run2)
     shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
-    data = np.mean(shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1]],axis=2)
-   
+    
+    data = np.mean(shared_data[:,song_bounds[song_idx]+hrf:song_bounds[song_idx + 1]+hrf],axis=2)
+    
+    if song_idx == 15:
+        song_features = song_features[:,:-hrf]
+ 
+    
     rsa_scores = np.zeros(nPerm+1)
     perm_features = song_features.copy()
  
@@ -173,8 +178,8 @@ for j in range(voxmean.shape[1]):
  
 print('Saving data to Searchlight Folder')
 print(songs[song_idx])
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/chroma/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run1', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/chroma/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run1', results3d)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/chroma/perms/globals_z_srm_k' + str(srm_k) + '_fit_run1', results3d_perms)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/chroma/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run2', results3d_real)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/chroma/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run2', results3d)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/chroma/perms/globals_z_srm_k' + str(srm_k) + '_fit_run2', results3d_perms)
 
 
