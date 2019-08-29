@@ -60,6 +60,10 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
     SL_allvox = []
     SL_results = []
     datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_input/'
+    chroma1 = np.load(datadir + 'chromaRun1_hrf.npy')
+    chroma2 = np.load(datadir + 'chromaRun2_hrf.npy')
+    mfcc1   = np.load(datadir + 'mfccRun1_hrf.npy')
+    mfcc2   = np.load(datadir + 'mfccRun2_hrf.npy')
     for x in range(0,np.max(coords, axis=0)[0]+stride,stride):
         for y in range(0,np.max(coords, axis=0)[1]+stride,stride):
            for z in range(0,np.max(coords, axis=0)[2]+stride,stride):
