@@ -15,6 +15,7 @@ datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/chris_dartmouth/dat
 ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/'
 
 song_number = int(sys.argv[1]) - 1
+roi = str(sys.argv[2])
 
 songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
@@ -33,8 +34,8 @@ start = song_bounds[song_number] + hrf
 end = song_bounds[song_number + 1] + hrf
 
 # Load in data
-train = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run1_n25.npy'),axis=1,ddof=1))
-test = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run2_n25.npy'),axis=1,ddof=1))
+train = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_precuneus_run1_n25.npy'),axis=1,ddof=1))
+test = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_precuneus_run2_n25.npy'),axis=1,ddof=1))
 
 # Convert data into lists where each element is voxels by samples
 train_list = []
@@ -91,11 +92,11 @@ for i in range(len(human_bounds)-1):
 
 song_titles = ['St Pauls Suite', 'I Love Music', 'Moonlight Sonata', 'Change of the Guard','Waltz of Flowers','The Bird', 'Island', 'Allegro Moderato', 'Finlandia', 'Early Summer', 'Capriccio Espagnole', 'Symphony Fantastique', 'Boogie Stop Shuffle', 'My Favorite Things', 'Blue Monk','All Blues']
 
-plt.title('HMM Fit to lPrecunues for ' + song_titles[song_number],fontsize=18,fontweight='bold')
+plt.title('Annotations for ' + roi + ' for ' + song_titles[song_number],fontsize=18,fontweight='bold')
 plt.xlabel('TRs',fontsize=18,fontweight='bold')
 plt.ylabel('TRs',fontsize=18,fontweight='bold')
-plt.legend(handles=[rect1,rect2])
+#plt.legend(handles=[rect1,rect2])
 
-#plt.savefig('plots/' + songs[song_number] + '_srm_k_' + str(features) + '_iter_' + str(n_iter))
+plt.savefig('plots/' + songs[song_number] + '_srm_k_' + str(features) + '_' + roi)
 
 
