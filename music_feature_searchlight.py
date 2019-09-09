@@ -272,7 +272,7 @@ def RSA(X,song_features,song_idx,song_bounds,srm_k,hrf):
     shared_data = srm.transform(run1)
     shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
     
-    data = np.mean(shared_data[:,song_bounds[song_idx]+hrf:song_bounds[song_idx + 1]+hrf],axis=2)
+    data = np.mean(shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1]],axis=2)
     
     song_features = song_features[:,song_bounds[song_idx]:song_bounds[song_idx + 1]]
 
@@ -287,7 +287,7 @@ def RSA(X,song_features,song_idx,song_bounds,srm_k,hrf):
     for p in range(nPerm+1):
         spearmanCorr = stats.spearmanr(voxVec,songVec,nan_policy='omit')
         rsa_scores[p] = spearmanCorr[0]
-        song_features = phase_randomize(song_features, voxelwise=False, random_state=p)
+        song_features = phase_randomize(song_features.T, voxelwise=False, random_state=p).T
         songCorr = np.corrcoef(song_features.T)
         songVec = squareform(songCorr, checks=False)
 
@@ -315,8 +315,8 @@ for j in range(voxmean.shape[1]):
  
 print('Saving data to Searchlight Folder')
 print(songs[song_idx])
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/mfcc/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run1', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/mfcc/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run1', results3d)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/mfcc/perms/globals_z_srm_k' + str(srm_k) + '_fit_run1', results3d_perms)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/chroma/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run2', results3d_real)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/chroma/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run2', results3d)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/music_features/' + songs[song_idx] +'/chroma/perms/globals_z_srm_k' + str(srm_k) + '_fit_run2', results3d_perms)
 
 
