@@ -3,14 +3,14 @@ import nibabel as nib
 from scipy import stats
 import glob
 
-datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/'
+datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/bound_match_subtraction/'
 
 nii_template = nib.load('/jukebox/norman/jamalw/MES/subjects/MES_022817_0/analysis/run1.feat/trans_filtered_func_data.nii')
 
 mask = nib.load('/jukebox/norman/jamalw/MES/prototype/link/scripts/mask_nonan.nii.gz').get_data()
 mask_reshaped = np.reshape(mask,(91*109*91)) != 0
 tmap_final1D = np.zeros((len(mask_reshaped)))
-pmap_final1D = np.zeros((len(mask_reshaped),1001))
+pmap_final1D = np.zeros((len(mask_reshaped)))
 qmap_final1D = np.zeros((len(mask_reshaped)))
 
 songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
@@ -65,32 +65,33 @@ tmap_final4D = np.zeros((91,109,91,1001))
 pmap_final4D = np.zeros((91,109,91,1001))
 qmap_final4D = np.zeros((91,109,91,1001))
 
-for i in range(1001):
-    tmap1D = np.zeros((len(all_songs1D[:,:,0])))
-    pmap1D = np.zeros((len(all_songs1D[:,:,0])))
-    qmap1D = np.zeros((len(all_songs1D[:,:,0])))
+i = 0
 
-    for j in range(len(all_songs1D[:,:,0])):
-        tmap1D[j],pmap1D[j] = stats.ttest_1samp(all_songs1D[j,i,:],0,axis=0)
-        if all_songs1D[j,:].mean() > 0:
-            pmap1D[j] = pmap1D[j]/2
-        else:
-            pmap1D[j] = 1-pmap1D[j]/2
+tmap1D = np.zeros((len(all_songs1D[:,:,0])))
+pmap1D = np.zeros((len(all_songs1D[:,:,0])))
+qmap1D = np.zeros((len(all_songs1D[:,:,0])))
 
-    qmap1D = FDR_p(pmap1D)
+for j in range(len(all_songs1D[:,:,0])):
+	tmap1D[j],pmap1D[j] = stats.ttest_1samp(all_songs1D[j,i,:],0,axis=0)
+	if all_songs1D[j,:].mean() > 0:
+		pmap1D[j] = pmap1D[j]/2
+	else:
+		pmap1D[j] = 1-pmap1D[j]/2
 
-    # Fit data back into whole brain
-    tmap_final1D[mask_reshaped==1] = tmap1D
-    tmap_final3D = np.reshape(tmap_final1D,(91,109,91))
-    tmap_final4D[:,:,:,i] = tmap_final3D    
+qmap1D = FDR_p(pmap1D)
 
-    pmap_final1D[mask_reshaped==1] = pmap1D
-    pmap_final3D = np.reshape(pmap_final1D,(91,109,91))
-    pmap_final4D[:,:,:,i] = pmap_final3D
+# Fit data back into whole brain
+tmap_final1D[mask_reshaped==1] = tmap1D
+tmap_final3D = np.reshape(tmap_final1D,(91,109,91))
+tmap_final4D[:,:,:,i] = tmap_final3D    
 
-    qmap_final1D[mask_reshaped==1] = qmap1D
-    qmap_final3D = np.reshape(qmap_final1D,(91,109,91))
-    qmap_final4D[:,:,:,i] = qmap_final3D
+pmap_final1D[mask_reshaped==1] = pmap1D
+pmap_final3D = np.reshape(pmap_final1D,(91,109,91))
+pmap_final4D[:,:,:,i] = pmap_final3D
+
+qmap_final1D[mask_reshaped==1] = qmap1D
+qmap_final3D = np.reshape(qmap_final1D,(91,109,91))
+qmap_final4D[:,:,:,i] = qmap_final3D
 
 # save data
 maxval = np.max(tmap_final4D[:,:,:,0])
@@ -98,27 +99,27 @@ minval = np.min(tmap_final4D[:,:,:,0])
 img = nib.Nifti1Image(tmap_final4D[:,:,:,0], affine=nii_template.affine)
 img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
-nib.save(img,datadir + '/ttest_results/tstats_map_both_runs.nii.gz')
+nib.save(img,datadir + 'ttest_results/tstats_map_both_runs.nii.gz')
 
 maxval = np.max(pmap_final4D[:,:,:,0])
 minval = np.min(pmap_final4D[:,:,:,0])
 img = nib.Nifti1Image(pmap_final4D[:,:,:,0], affine=nii_template.affine)
 img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
-nib.save(img,datadir + '/ttest_results/pstats_map_both_runs.nii.gz')
+nib.save(img,datadir + 'ttest_results/pstats_map_both_runs.nii.gz')
 
-np.save(datadir + '/ttest_results/pstats_map_both_runs_w_perms',pmap_final4D)
+np.save(datadir + 'ttest_results/pstats_map_both_runs_w_perms',pmap_final4D)
 
 maxval = np.max(qmap_final4D[:,:,:,0])
 minval = np.min(qmap_final4D[:,:,:,0])
 img = nib.Nifti1Image(qmap_final4D[:,:,:,0], affine=nii_template.affine)
 img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
-nib.save(img,datadir + '/ttest_results/qstats_map_both_runs.nii.gz')
+nib.save(img,datadir + 'ttest_results/qstats_map_both_runs.nii.gz')
 
 maxval = np.max(zmap_final3D)
 minval = np.min(zmap_final3D)
 img = nib.Nifti1Image(zmap_final3D, affine=nii_template.affine)
 img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
-nib.save(img,datadir + '/ttest_results/zstats_map_both_runs.nii.gz')
+nib.save(img,datadir + 'ttest_results/zstats_map_both_runs.nii.gz')
