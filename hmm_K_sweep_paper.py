@@ -38,12 +38,26 @@ for i in range(len(newDict)):
     if list(newDict.keys())[i] % 1 == 0:
         fairK.append(list(newDict.items())[i][0])
 
+
+#########################################################################################
+# Here we train and test the model on both runs separately. This will result in two SRM-ified datasets: one for all of run 1 and one for all of run 2. Songs from these datasets will be indexed separately in the following HMM step and then averaged before fitting the HMM.
+
 song_number = int(sys.argv[1]) - 1
 roi = str(sys.argv[2])
 
-songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
+# run 1 times
+song_bounds_run1 = np.array([0,225,314,494,628,718,898,1032,1122,1301,1436,1660,1749,1973, 2198,2377,2511])
 
-durs = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135]) 
+songs_run1 = ['Finlandia', 'Blue_Monk', 'I_Love_Music','Waltz_of_Flowers','Capriccio_Espagnole','Island','All_Blues','St_Pauls_Suite','Moonlight_Sonata','Symphony_Fantastique','Allegro_Moderato','Change_of_the_Guard','Boogie_Stop_Shuffle','My_Favorite_Things','The_Bird','Early_Summer']
+
+durs_run1 = np.array([225,90,180,135,90,180,135,90,180,135,225,90,225,225,180,135])
+
+# run 2 times
+song_bounds_run2 = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
+
+songs_run2 = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
+
+durs_run2 = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135])
 
 hrf = 5
 
@@ -51,7 +65,6 @@ human_bounds = np.load(ann_dirs + songs[song_number] + '/' + songs[song_number] 
 
 human_bounds = np.append(0,np.append(human_bounds,durs[song_number])) 
 
-song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
 
 # Get start and end of chosen song
 start = song_bounds[song_number] + hrf
@@ -88,10 +101,10 @@ shared_data_train_run2 = srm_train_run2.transform(train_list)
 avg_response_train_run1 = sum(shared_data_train_run1)/len(shared_data_train_run1)
 avg_response_train_run2 = sum(shared_data_train_run2)/len(shared_data_train_run2)
 
-avg_response = (avg_response_train_run1 + avg_response_train_run2)/2
-
 nTR = shared_data_train_run1[0][:,start:end].shape[1]
 nSubj = 25
+
+##################################################################################
 
 # Fit HMM
 ev = brainiak.eventseg.event.EventSegment(len(human_bounds) - 1)
