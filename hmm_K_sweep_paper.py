@@ -106,8 +106,8 @@ durs_run2 = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,13
 hrf = 5
 
 # Load in data
-run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_precuneus_run1_n25.npy'),axis=1,ddof=1))
-run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_precuneus_run2_n25.npy'),axis=1,ddof=1))
+run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run1_n25.npy'),axis=1,ddof=1))
+run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run2_n25.npy'),axis=1,ddof=1))
 
 nSubj = run1.shape[2]
 
@@ -176,4 +176,4 @@ for i in range(16):
         wVa_results[i,j] = within_across
 
 
-np.save('/jukebox/norman/jamalw/MES/prototype//link/scripts/k_sweep_results_paper/prec_wva',wVa_results)
+np.save('/jukebox/norman/jamalw/MES/prototype//link/scripts/k_sweep_results_paper/AG_wva',wVa_results)
