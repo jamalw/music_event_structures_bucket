@@ -14,32 +14,7 @@ import sys
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/chris_dartmouth/data/'
 ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/'
 
-#Iterate over all the key value pairs in dictionary and call the given
-#callback function() on each pair. Items for which callback() returns True,
-#add them to the new dictionary. In the end return the new dictionary.
-
-def filterTheDict(dictObj, callback):
-    newDict = dict()
-    # Iterate over all the items in dictionary
-    for (key, value) in dictObj.items():
-        # Check if item satisfies the given condition then add to new dict
-        if callback((key, value)):
-            newDict[key] = value
-    return newDict
-
-dur_vec = np.array([90,135,180,225])
-event_length_mat = dur_vec/np.arange(1,226)[:,None]
-unique, counts = np.unique(event_length_mat, return_counts=True)
-dict1 = dict(zip(unique,counts))
-newDict = filterTheDict(dict1, lambda elem: elem[1] == 4)
-
-fairK = []
-
-for i in range(len(newDict)):
-    if list(newDict.keys())[i] % 1 == 0:
-        fairK.append(list(newDict.items())[i][0])
-
-fairK = fairK[1:]
+K = np.array((3,5,9,15,20,25,30,35,40,45))
 
 def single_gamma_hrf(TR, t=5, d=5.2, onset=0, kernel=32):
     """Single gamma hemodynamic response function.
@@ -106,8 +81,8 @@ durs_run2 = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,13
 hrf = 5
 
 # Load in data
-run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run1_n25.npy'),axis=1,ddof=1))
-run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run2_n25.npy'),axis=1,ddof=1))
+run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_right_a1_version2_run1_n25.npy'),axis=1,ddof=1))
+run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_right_a1_version2_run2_n25.npy'),axis=1,ddof=1))
 
 nSubj = run1.shape[2]
 
@@ -176,4 +151,4 @@ for i in range(16):
         wVa_results[i,j] = within_across
 
 
-np.save('/jukebox/norman/jamalw/MES/prototype//link/scripts/k_sweep_results_paper/AG_wva',wVa_results)
+np.save('/jukebox/norman/jamalw/MES/prototype//link/scripts/k_sweep_results_paper/a1_wva',wVa_results)
