@@ -74,6 +74,17 @@ for j in range(len(all_songs1D[:,0])):
 
 qmap1D = FDR_p(pmap1D[~np.isnan(pmap1D)])
 
+#return nans and real values to qmap
+qmap1D_nans = np.zeros((len(all_songs1D[:,0])))
+idx_nan = np.where(np.isnan(pmap1D))[0]
+idx_non_nan = np.where(~np.isnan(pmap1D))[0]
+
+for i in range(len(idx_non_nan)):
+    qmap1D_nans[idx_non_nan[i]] = qmap1D[i]
+
+for i in range(len(idx_nan)):
+    qmap1D_nans[idx_nan[i]] = np.nan
+    
 # Fit data back into whole brain
 tmap_final1D[mask_reshaped==1] = tmap1D
 tmap_final3D = np.reshape(tmap_final1D,(91,109,91))
@@ -81,7 +92,7 @@ tmap_final3D = np.reshape(tmap_final1D,(91,109,91))
 pmap_final1D[mask_reshaped==1] = pmap1D
 pmap_final3D = np.reshape(pmap_final1D,(91,109,91))
 
-qmap_final1D[mask_reshaped==1] = qmap1D
+qmap_final1D[mask_reshaped==1] = qmap1D_nans
 qmap_final3D = np.reshape(qmap_final1D,(91,109,91))
 
 # save data
@@ -99,8 +110,8 @@ img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
 nib.save(img,datadir + 'ttest_results/pstats_map_both_runs.nii.gz')
 
-maxval = np.max(qmap_final3D)
-minval = np.min(qmap_final3D)
+maxval = np.max(qmap1D)
+minval = np.min(qmap1D)
 img = nib.Nifti1Image(qmap_final3D, affine=nii_template.affine)
 img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
