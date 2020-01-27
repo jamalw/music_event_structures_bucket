@@ -3,7 +3,7 @@ import nibabel as nib
 from scipy import stats
 import glob
 
-datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/bound_match_subtraction/'
+datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths/'
 
 nii_template = nib.load('/jukebox/norman/jamalw/MES/subjects/MES_022817_0/analysis/run1.feat/trans_filtered_func_data.nii')
 
@@ -54,8 +54,8 @@ def FDR_p(pvals):
     return qvals
 
 for i in range(len(songs)):
-    fn_z = glob.glob(datadir + songs[i] + '/zscores/z_subtracted_data.npy')
-    data = np.load(fn_z[0])
+    fn_z = glob.glob(datadir + songs[i] + '/zscores/globals_avg_both_z_runs_n25_srmk_30.nii.gz')
+    data = nib.load(fn_z[0]).get_data()
     all_songs3D[:,:,:,i] = data
     all_songs1D[:,i] = data[mask != 0]
 
@@ -66,13 +66,13 @@ pmap1D = np.zeros((len(all_songs1D[:,0])))
 qmap1D = np.zeros((len(all_songs1D[:,0])))
 
 for j in range(len(all_songs1D[:,0])):
-	tmap1D[j],pmap1D[j] = stats.ttest_1samp(all_songs1D[j,:],0,axis=0)
+	tmap1D[j],pmap1D[j] = stats.ttest_1samp(all_songs1D[j,:][~np.isnan(all_songs1D[j,:])],0,axis=0)
 	if all_songs1D[j,:].mean() > 0:
 		pmap1D[j] = pmap1D[j]/2
 	else:
 		pmap1D[j] = 1-pmap1D[j]/2
 
-qmap1D = FDR_p(pmap1D)
+qmap1D = FDR_p(pmap1D[~np.isnan(pmap1D)])
 
 # Fit data back into whole brain
 tmap_final1D[mask_reshaped==1] = tmap1D
@@ -98,8 +98,6 @@ img = nib.Nifti1Image(pmap_final3D, affine=nii_template.affine)
 img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
 nib.save(img,datadir + 'ttest_results/pstats_map_both_runs.nii.gz')
-
-np.save(datadir + 'ttest_results/pstats_map_both_runs_w_perms',pmap_final4D)
 
 maxval = np.max(qmap_final3D)
 minval = np.min(qmap_final3D)
