@@ -59,7 +59,14 @@ for i in range(len(songs)):
     all_songs3D[:,:,:,i] = data
     all_songs1D[:,i] = data[mask != 0]
 
-zmap_final3D = np.mean(all_songs3D,axis=3)
+
+inf_idx = np.where(np.isinf(zmap_final3D))
+
+for i in range(len(inf_idx)):
+    zmap_final_3D[inf_idx[0,i],inf_idx[1,i],inf_idx[2,i]] = np.nan    
+
+
+zmap_final3D = np.nanmean(all_songs3D,axis=3)
 
 tmap1D = np.zeros((len(all_songs1D[:,0])))
 pmap1D = np.zeros((len(all_songs1D[:,0])))
