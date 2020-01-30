@@ -1,50 +1,66 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage.filters import gaussian_filter1d
+from statsmodels.nonparametric.kernel_regression import KernelReg
 
-datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/k_sweep_results_paper/'
+datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/'
 
-prec_data = np.load(datadir + 'prec_wva.npy')
-a1_data = np.load(datadir + 'a1_wva.npy')
-AG_data = np.load(datadir + 'AG_wva.npy')
+jobNum = 20
+nBoots = 1000
+prec_data_list = []
+a1_data_list = []
+AG_data_list = []
+
+# load in each job (20 of which contain 50 bootstraps each which is 1000 boostraps total) for each ROI separately to be converted into one large matrix containing all bootstraps
+for i in range(jobNum):
+    prec_data_jobNum = np.load(datadir + 'prec_wva' + str(i) + '.npy')
+    prec_data_list.append(prec_data_jobNum)
+    a1_data_jobNum = np.load(datadir + 'a1_wva' + str(i) + '.npy')
+    a1_data_list.append(a1_data_jobNum)
+    AG_data_jobNum = np.load(datadir + 'AG_wva' + str(i) + '.npy')
+    AG_data_list.append(AG_data_jobNum)
+
+prec_data = np.dstack(prec_data_list) 
+a1_data = np.dstack(a1_data_list)
+AG_data = np.dstack(AG_data_list)
+
+sigma = '3'
 
 durs_run1 = np.array([225,90,180,135,90,180,135,90,180,135,225,90,225,225,180,135])
 
 durs_run1_new = durs_run1[:,np.newaxis]
 
-fairK = np.array((3,5,9,15,45))
+fairK = np.array((3,5,9,15,20,25,30,35,40,45))
 
 event_lengths = durs_run1_new/fairK
 
 unique_event_lengths = np.unique(event_lengths)
+x = event_lengths.ravel()
 
-plot_prec_data = np.zeros((len(unique_event_lengths)))
-plot_a1_data = np.zeros((len(unique_event_lengths)))
-plot_AG_data = np.zeros((len(unique_event_lengths)))
+for b in range(nBoots):
+    y_a1 = a1_data[:,:,b].ravel()
+    y_AG = AG_data[:,:,b].ravel()
+    y_prec = prec_data[:,:,b].ravel()
 
-for i in range(len(unique_event_lengths)):
-    plot_prec_data[i] = np.mean(prec_data[event_lengths == unique_event_lengths[i]])    
-    plot_a1_data[i] = np.mean(a1_data[event_lengths == unique_event_lengths[i]])
-    plot_AG_data[i] = np.mean(AG_data[event_lengths == unique_event_lengths[i]])
+KR = KernelReg(y_a1,x,var_type='c', bw=sigma)
+smooth_y_a1 = KR.fit(unique_event_lengths)
+plt.plot(unique_event_lengths, smooth_y_a1[0], color='red', label='A1')
 
-sigma = 3
-x = np.arange(len(unique_event_lengths))
+KR = KernelReg(y_AG,x,var_type='c', bw=sigma)
+smooth_y_AG = KR.fit(unique_event_lengths)
+plt.plot(unique_event_lengths, smooth_y_AG[0], color='magenta', label='AG')
 
-plot_a1_data_smooth  = gaussian_filter1d(plot_a1_data,sigma=sigma)
-plt.plot(x,plot_a1_data_smooth, color='red', label='A1')
+KR = KernelReg(y_prec,x,var_type='c', bw=sigma)
+smooth_y_prec = KR.fit(unique_event_lengths)
+plt.plot(unique_event_lengths, smooth_y_prec[0], label='prec')
 
-plot_AG_data_smooth = gaussian_filter1d(plot_AG_data,sigma=sigma)
-plt.plot(x,plot_AG_data_smooth, color='magenta', label='AG')
-
-plot_prec_data_smooth = gaussian_filter1d(plot_prec_data,sigma=sigma)
-plt.plot(x,plot_prec_data_smooth, color='green', label='prec')
 
 plt.legend()
 
-plt.xticks(x,unique_event_lengths,rotation=45)
-plt.xlabel('Event Length', fontsize=18)
+#plt.xticks(x,unique_event_lengths,rotation=45)
+plt.xlabel('Event Length (s)', fontsize=18)
 plt.ylabel('WvA Score', fontsize=18)
 plt.title('ROIs Preferred Event Length', fontsize=18)
 plt.tight_layout()
 
-plt.savefig('k_sweep_results_paper/preferred_event_length')
+#plt.savefig('hmm_K_sweep_paper_results/preferred_event_length')
