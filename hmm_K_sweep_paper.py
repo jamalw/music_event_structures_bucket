@@ -14,7 +14,9 @@ import sys
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/chris_dartmouth/data/'
 ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/'
 
-K = np.array((3,5,9,15,20,25,30,35,40,45))
+bootNum = int(sys.argv[1])
+
+K_set = np.array((3,5,9,15,20,25,30,35,40,45))
 
 def single_gamma_hrf(TR, t=5, d=5.2, onset=0, kernel=32):
     """Single gamma hemodynamic response function.
@@ -93,62 +95,75 @@ for i in range(0,nSubj):
     run1_list.append(np.apply_along_axis(np.convolve, 1, run1[:,:,i], hrf, 'full')[:run1.shape[1]][:,0:2511])
     run2_list.append(np.apply_along_axis(np.convolve, 1, run2[:,:,i], hrf, 'full')[:run2.shape[1]][:,0:2511])
 
-n_iter = 50
-features = 10
-# Initialize model
-print('Building Model')
-srm_train_run1 = SRM(n_iter=n_iter, features=features)
-srm_train_run2 = SRM(n_iter=n_iter, features=features)
+run1_list_orig = run1_list.copy()
+run2_list_orig = run2_list.copy()
+nboot = 50
 
-# Fit model to training data
-print('Training Model')
-srm_train_run1.fit(run1_list)
-srm_train_run2.fit(run2_list)
+wVa_results = np.zeros((16,len(K_set),nboot))
 
-# Test model on testing data to produce shared response
-print('Testing Model')
-shared_data_train_run1 = srm_train_run1.transform(run2_list)
-shared_data_train_run2 = srm_train_run2.transform(run1_list)
+for b in range(nboot):
+        resamp_subjs = np.random.choice(nSubj, size=nSubj, replace=True)
+        run1_list = []
+        run2_list = []
+        for r in range(len(resamp_subjs)):
+            run1_list.append(run1_list_orig[resamp_subjs[r]])	
+            run2_list.append(run2_list_orig[resamp_subjs[r]])
 
-avg_response_train_run1 = sum(shared_data_train_run1)/len(shared_data_train_run1)
-avg_response_train_run2 = sum(shared_data_train_run2)/len(shared_data_train_run2)
+        n_iter = 50
+        features = 10
+        # Initialize model
+        print('Building Model')
+        srm_train_run1 = SRM(n_iter=n_iter, features=features)
+        srm_train_run2 = SRM(n_iter=n_iter, features=features)
 
-##################################################################################
-wVa_results = np.zeros((16,len(fairK)))
+        # Fit model to training data
+        print('Training Model')
+        srm_train_run1.fit(run1_list)
+        srm_train_run2.fit(run2_list)
 
-for i in range(16):
-    print('song number ',str(i))
-    # grab start and end time for each song from bound vectors. for SRM data trained on run 1 and tested on run 2, use song name from run 1 to find index for song onset in run 2 bound vector 
-    start_run1 = song_bounds_run2[songs_run2.index(songs_run1[i])]
-    end_run1   = song_bounds_run2[songs_run2.index(songs_run1[i])+1]
-    start_run2 = song_bounds_run1[i]
-    end_run2   = song_bounds_run1[i+1]
-    # chop song from bold data
-    data1 = avg_response_train_run1[:,start_run1:end_run1]
-    data2 = avg_response_train_run2[:,start_run2:end_run2]
-    # average song-specific bold data from each run 
-    data = (data1 + data2)/2
-    for j in range(len(fairK)):
-        # Fit HMM
-        ev = brainiak.eventseg.event.EventSegment(int(fairK[j]))
-        ev.fit(data.T)
-        events = np.argmax(ev.segments_[0],axis=1)
+        # Test model on testing data to produce shared response
+        print('Testing Model')
+        shared_data_train_run1 = srm_train_run1.transform(run2_list)
+        shared_data_train_run2 = srm_train_run2.transform(run1_list)
 
-        max_event_length = stats.mode(events)[1][0]
-        # compute timepoint by timepoint correlation matrix 
-        cc = np.corrcoef(data.T) # Should be a time by time correlation matrix
+        avg_response_train_run1 = sum(shared_data_train_run1)/len(shared_data_train_run1)
+        avg_response_train_run2 = sum(shared_data_train_run2)/len(shared_data_train_run2)
 
-        # Create a mask to only look at values up to max_event_length
-        local_mask = np.zeros(cc.shape, dtype=bool)
-        for k in range(1,max_event_length):
-	        local_mask[np.diag(np.ones(cc.shape[0]-k, dtype=bool), k)] = True
+	##################################################################################
 
-        # Compute within vs across boundary correlations
-        same_event = events[:,np.newaxis] == events
-        within = cc[same_event*local_mask].mean()
-        across = cc[(~same_event)*local_mask].mean()
-        within_across = within - across
-        wVa_results[i,j] = within_across
+        for i in range(16):
+            print('song number ',str(i))
+            # grab start and end time for each song from bound vectors. for SRM data trained on run 1 and tested on run 2, use song name from run 1 to find index for song onset in run 2 bound vector 
+            start_run1 = song_bounds_run2[songs_run2.index(songs_run1[i])]
+            end_run1   = song_bounds_run2[songs_run2.index(songs_run1[i])+1]
+            start_run2 = song_bounds_run1[i]
+            end_run2   = song_bounds_run1[i+1]
+            # chop song from bold data
+            data1 = avg_response_train_run1[:,start_run1:end_run1]
+            data2 = avg_response_train_run2[:,start_run2:end_run2]
+            # average song-specific bold data from each run 
+            data = (data1 + data2)/2
+            for j in range(len(K_set)):
+                # Fit HMM
+                ev = brainiak.eventseg.event.EventSegment(int(K_set[j]))
+                ev.fit(data.T)
+                events = np.argmax(ev.segments_[0],axis=1)
+                                 
+                max_event_length = stats.mode(events)[1][0]
+                # compute timepoint by timepoint correlation matrix 
+                cc = np.corrcoef(data.T) # Should be a time by time correlation matrix
+                         
+                # Create a mask to only look at values up to max_event_length
+                local_mask = np.zeros(cc.shape, dtype=bool)
+                for k in range(1,max_event_length):
+                    local_mask[np.diag(np.ones(cc.shape[0]-k, dtype=bool), k)] = True
+                      
+                    # Compute within vs across boundary correlations
+                    same_event = events[:,np.newaxis] == events
+                    within = cc[same_event*local_mask].mean()
+                    across = cc[(~same_event)*local_mask].mean()
+                    within_across = within - across
+                    wVa_results[i,j,b] = within_across
 
 
-np.save('/jukebox/norman/jamalw/MES/prototype//link/scripts/k_sweep_results_paper/a1_wva',wVa_results)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/a1_wva' + str(bootNum), wVa_results)
