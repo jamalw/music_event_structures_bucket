@@ -32,23 +32,21 @@ AG_max  = np.zeros((len(unique_event_lengths)))
 prec_min  = np.zeros((len(unique_event_lengths)))
 prec_max  = np.zeros((len(unique_event_lengths))) 
 
+nBoot = a1.shape[1]
+
 # compute 95% confidence intervals for each bootstrap sample
 for i in range(len(unique_event_lengths)):
-    a1_boot_mean = np.mean(a1[i,:])
-    a1_95ci = 1.96 * sem(a1[i,:])
-    a1_min[i] = a1_boot_mean - a1_95ci
-    a1_max[i] = a1_boot_mean + a1_95ci
+    a1_sorted = np.sort(a1[i,:])
+    a1_min[i] = a1_sorted[int(np.round(nBoot*0.025))]
+    a1_max[i] = a1_sorted[int(np.round(nBoot*0.975))]     
 
-    AG_boot_mean = np.mean(AG[i,:])
-    AG_95ci = 1.96 * sem(AG[i,:])
-    AG_min[i] = AG_boot_mean - AG_95ci
-    AG_max[i] = AG_boot_mean + AG_95ci
+    AG_sorted = np.sort(AG[i,:])
+    AG_min[i] = AG_sorted[int(np.round(nBoot*0.025))]
+    AG_max[i] = AG_sorted[int(np.round(nBoot*0.975))]     
 
-    prec_boot_mean = np.mean(prec[i,:])
-    prec_95ci = 1.96 * sem(prec[i,:])
-    prec_min[i] = prec_boot_mean - prec_95ci
-    prec_max[i] = prec_boot_mean + prec_95ci
-
+    prec_sorted = np.sort(prec[i,:])
+    prec_min[i] = prec_sorted[int(np.round(nBoot*0.025))]
+    prec_max[i] = prec_sorted[int(np.round(nBoot*0.975))]     
 
 
 plt.figure(figsize=(10,5))
