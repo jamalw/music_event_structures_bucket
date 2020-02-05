@@ -98,6 +98,8 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
     voxmean = voxmean / vox_SLcount[:,np.newaxis]
     vox_z = np.zeros((coords.shape[0], nPerm+1))
     for p in range(nPerm+1):
+        if np.std(voxmean[:,1:],axis=1) == 0
+            print("Standard Deviation = ", str(np.std(voxmean[:,1:],axis=1)))
         vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1) 
     return vox_z,voxmean
 
