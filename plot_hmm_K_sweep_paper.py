@@ -51,24 +51,26 @@ for i in range(len(unique_event_lengths)):
 
 plt.figure(figsize=(10,5))
 
-plt.plot(range(len(unique_event_lengths)), a1_mean, color='k', label='rA1')
-plt.fill_between(range(len(unique_event_lengths)), a1_min, a1_max,color='k',alpha=0.3)
+plt.plot(unique_event_lengths, a1_mean, color='k', label='rA1')
+plt.fill_between(unique_event_lengths, a1_min, a1_max,color='k',alpha=0.3)
 
-plt.plot(range(len(unique_event_lengths)), AG_mean, color='magenta', label='lAG')
-plt.fill_between(range(len(unique_event_lengths)), AG_min, AG_max,color='magenta',alpha=0.3)
+plt.plot(unique_event_lengths, AG_mean, color='magenta', label='lAG')
+plt.fill_between(unique_event_lengths, AG_min, AG_max,color='magenta',alpha=0.3)
 
-plt.plot(range(len(unique_event_lengths)), prec_mean, color='green', label='lprec')
-plt.fill_between(range(len(unique_event_lengths)), prec_min, prec_max,color='green',alpha=0.3)
+plt.plot(unique_event_lengths, prec_mean, color='green', label='lprec')
+plt.fill_between(unique_event_lengths, prec_min, prec_max,color='green',alpha=0.3)
 
 plt.legend()
 
-plt.xticks(range(len(x)),unique_event_lengths.round(decimals=1),rotation=45)
+event_lengths_str = ['2','','','3','','','','4','','5','','','','6','','','','','9','10','','12','15','18','20','25','27','30','36','45','60','75']
+
+plt.xticks(unique_event_lengths,event_lengths_str,rotation=45)
 plt.xlabel('Event Length (s)', fontsize=18)
 plt.ylabel('WvA Score', fontsize=18)
 plt.title('ROIs Preferred Event Length', fontsize=18)
 plt.tight_layout()
 
-#plt.savefig('hmm_K_sweep_paper_results/preferred_event_length')
+plt.savefig('hmm_K_sweep_paper_results/preferred_event_length')
 
 A1_peaks_less_than_AG_peaks = np.zeros((len(unique_event_lengths)))
 A1_peaks_less_than_prec_peaks = np.zeros((len(unique_event_lengths)))
