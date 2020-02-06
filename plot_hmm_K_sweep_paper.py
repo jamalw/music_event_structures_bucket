@@ -51,8 +51,8 @@ for i in range(len(unique_event_lengths)):
 
 plt.figure(figsize=(10,5))
 
-plt.plot(range(len(unique_event_lengths)), a1_mean, color='red', label='rA1')
-plt.fill_between(range(len(unique_event_lengths)), a1_min, a1_max,color='red',alpha=0.3)
+plt.plot(range(len(unique_event_lengths)), a1_mean, color='k', label='rA1')
+plt.fill_between(range(len(unique_event_lengths)), a1_min, a1_max,color='k',alpha=0.3)
 
 plt.plot(range(len(unique_event_lengths)), AG_mean, color='magenta', label='lAG')
 plt.fill_between(range(len(unique_event_lengths)), AG_min, AG_max,color='magenta',alpha=0.3)
@@ -68,4 +68,18 @@ plt.ylabel('WvA Score', fontsize=18)
 plt.title('ROIs Preferred Event Length', fontsize=18)
 plt.tight_layout()
 
-plt.savefig('hmm_K_sweep_paper_results/preferred_event_length')
+#plt.savefig('hmm_K_sweep_paper_results/preferred_event_length')
+
+A1_peaks_less_than_AG_peaks = np.zeros((len(unique_event_lengths)))
+A1_peaks_less_than_prec_peaks = np.zeros((len(unique_event_lengths)))
+
+for i in range(len(unique_event_lengths)):
+    A1_peak = np.max(a1[i,:])
+    AG_peak = np.max(AG[i,:])
+    prec_peak = np.max(prec[i,:]) 
+    A1_peaks_less_than_AG_peaks[i] = A1_peak < AG_peak
+    A1_peaks_less_than_prec_peaks[i] = A1_peak < prec_peak
+
+pvals_A1_AG = np.sum(A1_peaks_less_than_AG_peaks)/len(A1_peaks_less_than_AG_peaks)
+pvals_A1_prec = np.sum(A1_peaks_less_than_prec_peaks)/len(A1_peaks_less_than_prec_peaks)
+
