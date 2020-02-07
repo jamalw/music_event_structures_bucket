@@ -73,13 +73,13 @@ plt.tight_layout()
 #plt.savefig('hmm_K_sweep_paper_results/preferred_event_length')
 
 # compute pvals
-A1_peaks_less_than_AG_peaks = np.zeros((len(unique_event_lengths)))
-A1_peaks_less_than_prec_peaks = np.zeros((len(unique_event_lengths)))
+A1_peaks_less_than_AG_peaks = np.zeros((1000))
+A1_peaks_less_than_prec_peaks = np.zeros((1000))
 
-for i in range(len(unique_event_lengths)):
-    A1_peak = np.argmax(a1[i,:])
-    AG_peak = np.argmax(AG[i,:])
-    prec_peak = np.argmax(prec[i,:]) 
+for i in range(1000):
+    A1_peak = np.argmax(a1[:,i])
+    AG_peak = np.argmax(AG[:,i])
+    prec_peak = np.argmax(prec[:,i]) 
     A1_peaks_less_than_AG_peaks[i] = A1_peak < AG_peak
     A1_peaks_less_than_prec_peaks[i] = A1_peak < prec_peak
 
