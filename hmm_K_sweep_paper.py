@@ -18,51 +18,6 @@ bootNum = int(sys.argv[1])
 
 K_set = np.array((3,5,9,15,20,25,30,35,40,45))
 
-def single_gamma_hrf(TR, t=5, d=5.2, onset=0, kernel=32):
-    """Single gamma hemodynamic response function.
-    Parameters
-    ----------
-    TR : float
-        Repetition time at which to generate the HRF (in seconds).
-    t : float (default=5.4)
-        Delay of response relative to onset (in seconds).
-    d : float (default=5.2)
-        Dispersion of response.
-    onset : float (default=0)
-        Onset of hemodynamic response (in seconds).
-    kernel : float (default=32)
-        Length of kernel (in seconds).
-    Returns
-    -------
-    hrf : array
-        Hemodynamic repsonse function
-    References
-    ----------
-    [1] Adapted from the pymvpa tools.
-        https://github.com/PyMVPA/PyMVPA/blob/master/mvpa2/misc/fx.py
-    """
-
-    ## Define metadata.
-    fMRI_T = 16.0
-    TR = float(TR)
-
-    ## Define times.
-    dt = TR/fMRI_T
-    u  = np.arange(kernel/dt + 1) - onset/dt
-    u *= dt
-
-    ## Generate (super-sampled) HRF.
-    hrf = (u / t) ** ((t ** 2) / (d ** 2) * 8.0 * np.log(2.0)) \
-          * np.e ** ((u - t) / -((d ** 2) / t / 8.0 / np.log(2.0)))
-
-    ## Downsample.
-    good_pts=np.array(range(np.int(kernel/TR)))*fMRI_T
-    hrf=hrf[good_pts.astype(int)]
-
-    ## Normalize and return.
-    hrf = hrf/np.sum(hrf)
-    return hrf
-
 #########################################################################################
 # Here we train and test the model on both runs separately. This will result in two SRM-ified datasets: one for all of run 1 and one for all of run 2. Songs from these datasets will be indexed separately in the following HMM step and then averaged before fitting the HMM.
 
@@ -80,26 +35,26 @@ songs_run2 = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_t
 
 durs_run2 = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135])
 
-hrf = 5
-
 # Load in data
-run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_right_a1_version2_run1_n25.npy'),axis=1,ddof=1))
-run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_right_a1_version2_run2_n25.npy'),axis=1,ddof=1))
+run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run1_n25.npy'),axis=1,ddof=1))
+run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run2_n25.npy'),axis=1,ddof=1))
 
 nSubj = run1.shape[2]
 
-# Convert data into lists where each element is voxels by samples and convolve data with hrf in the process
+# Convert data into lists where each element is voxels by samples
 run1_list = []
 run2_list = []
 for i in range(0,nSubj):
-    run1_list.append(np.apply_along_axis(np.convolve, 1, run1[:,:,i], hrf, 'full')[:run1.shape[1]][:,0:2511])
-    run2_list.append(np.apply_along_axis(np.convolve, 1, run2[:,:,i], hrf, 'full')[:run2.shape[1]][:,0:2511])
+    run1_list.append(run1[:,:,i])
+    run2_list.append(run2[:,:,i])
 
 run1_list_orig = run1_list.copy()
 run2_list_orig = run2_list.copy()
 nboot = 50
 
 wVa_results = np.zeros((16,len(K_set),nboot))
+
+np.random.seed(bootNum)
 
 for b in range(nboot):
         resamp_subjs = np.random.choice(nSubj, size=nSubj, replace=True)
@@ -166,4 +121,4 @@ for b in range(nboot):
                     wVa_results[i,j,b] = within_across
 
 
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/a1_wva' + str(bootNum), wVa_results)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/AG_wva' + str(bootNum), wVa_results)
