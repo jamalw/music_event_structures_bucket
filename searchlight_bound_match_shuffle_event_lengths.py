@@ -100,15 +100,12 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
     voxmean = voxmean / vox_SLcount[:,np.newaxis]
     vox_z = np.zeros((coords.shape[0], nPerm+1))
     
-    for z in range(vox_z.shape[0]):        
-        for p in range(nPerm+1):
-            #vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1)
-            if ~np.isnan(voxmean[z,:]).any():
-                vox_z[z,p] = np.sum(voxmean[z,:] <= voxmean[z,p])/(nPerm + 1)
-            else:
-                vox_z[z,p] = np.nan
-        
+    for p in range(nPerm+1):
+        vox_z[:,p] = (np.mean(voxmean[:,1:],axis=1) - voxmean[:,p])/np.std(voxmean[:,1:],axis=1)        
+
     return vox_z,voxmean
+
+
 
 def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     
