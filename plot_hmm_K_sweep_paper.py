@@ -4,9 +4,9 @@ from scipy.stats import sem
 
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/'
 
-a1 = np.load(datadir + 'smooth_y_a1.npy')
-AG = np.load(datadir + 'smooth_y_AG.npy')
-prec = np.load(datadir + 'smooth_y_prec.npy')
+a1 = np.load(datadir + 'smooth_wva.npy')[:,0,:]
+AG = np.load(datadir + 'smooth_wva.npy')[:,1,:]
+prec = np.load(datadir + 'smooth_wva.npy')[:,2,:]
 
 a1_mean = a1.mean(axis=1)
 AG_mean = AG.mean(axis=1)
