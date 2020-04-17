@@ -46,6 +46,17 @@ plt.xticks(ind + width / 4.5, labels, fontsize = 15)
 axes = plt.gca()
 axes.set_ylim([0,5])
 
-plt.savefig('recog_fig.svg')
+# compute t-test for difference between day1 discrimination and day 2 discrimination
+d1 = np.mean(data1[0:16,:],axis=0)
+d2 = np.mean(data2[0:16,:],axis=0)
+l1 = np.mean(data1[16:32,:],axis=0)
+l2 = np.mean(data2[16:32,:],axis=0)
+
+diff1 = d1 - l1
+diff2 = d2 - l2
+
+stats.ttest_rel(diff1,diff2)
+
+#plt.savefig('recog_fig.svg')
 
 
