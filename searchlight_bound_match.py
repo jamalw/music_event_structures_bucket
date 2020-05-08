@@ -142,6 +142,7 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     bounds = np.where(np.diff(np.argmax(ev.segments_[0],axis=1)))[0] 
     match = np.zeros(nPerm+1)
     perm_bounds = bounds.copy()
+    min_dist = 7
 
     for p in range(nPerm+1):
         for hb in human_bounds:
@@ -149,7 +150,10 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
                 match[p] += 1
         match[p] /= len(human_bounds)
         np.random.seed(p)
-        perm_bounds = np.random.choice(nTR,K-1,replace=False) 
+        perm_bounds = np.random.choice(nTR,K-1,replace=False)
+        # add constraint that if the distance between any pair of boundaries is less than the shortest event across all songs (min_dist = 7TRS) then skip this permutation
+        while np.any(np.diff(np.sort(perm_bounds)) < min_dist) == True or np.any(perm_bounds < min_dist) == True:
+            perm_bounds = np.random.choice(nTR,K-1,replace=False) 
 
     return match
 
@@ -175,8 +179,8 @@ for j in range(voxmean.shape[1]):
  
 print('Saving data to Searchlight Folder')
 print(songs[song_idx])
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run1_no_motion', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run1_no_motion', results3d)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_fit_run1_no_motion', results3d_perms)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_train_run1_min_dist7', results3d_real)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_train_run1_min_dist7', results3d)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_train_run1_no_motion_min_dist7', results3d_perms)
 
 

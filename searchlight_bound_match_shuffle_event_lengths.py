@@ -60,7 +60,6 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
     SL_allvox = []
     SL_results = []
     datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_input/'
-
     for x in range(0,np.max(coords, axis=0)[0]+stride,stride):
         for y in range(0,np.max(coords, axis=0)[1]+stride,stride):
            for z in range(0,np.max(coords, axis=0)[2]+stride,stride):
@@ -98,10 +97,8 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
        vox_SLcount[SL_allvox[sl]] += 1
     voxmean = voxmean / vox_SLcount[:,np.newaxis]
     vox_z = np.zeros((coords.shape[0], nPerm+1))
-    
     for p in range(nPerm+1):
-        vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1)
-    
+        vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1) 
     return vox_z,voxmean
 
 def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
@@ -156,15 +153,8 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
         np.random.seed(p)
         perm_lengths = np.random.permutation(event_lengths)
         events = np.zeros(nTR, dtype=np.int)
-        events[np.cumsum(perm_lengths[:-1])] = 1
-        # pick number of timepoints to rotate by  
-        nrot = np.random.randint(len(events))
-        # convert events to list to allow combining lists in next step
-        events_lst = list(events)
-        # rotate boundaries
-        events_rot = np.array(events_lst[-nrot:] + events_lst[:-nrot])
-        # select indexes for new boundaries
-        perm_bounds = np.where(events_rot == 1)[0] 
+        events[np.cumsum(perm_lengths[:-1])] = 1 
+        perm_bounds = np.where(events == 1) 
 
     return match
 
