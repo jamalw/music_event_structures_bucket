@@ -151,10 +151,7 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
                 match[p] += 1
         match[p] /= len(human_bounds)
         np.random.seed(p)
-        perm_lengths = np.random.permutation(event_lengths)
-        events = np.zeros(nTR, dtype=np.int)
-        events[np.cumsum(perm_lengths[:-1])] = 1 
-        perm_bounds = np.where(events == 1) 
+        perm_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1] 
 
     return match
 
