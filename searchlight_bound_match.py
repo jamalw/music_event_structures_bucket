@@ -101,6 +101,20 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
         vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1) 
     return vox_z,voxmean
 
+def choice_mindist(T,n,mindist):
+    bounds = np.zeros(T)
+    bounds[0:mindist] = -1
+    bounds[(T-mindist+1):T] = -1
+    for i in range(n):
+        b = np.random.choice(np.where(bounds==0)[0],1)[0]
+        bounds[b] = 1
+        for offset in range(1, mindist):
+            if b-offset >= 0: 
+                bounds[b-offset] = -1
+            if b+offset <= T-1:
+                bounds[b+offset] = -1
+    return np.where(bounds==1)[0] 
+
 def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     
     """fit hidden markov model
@@ -150,10 +164,7 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
                 match[p] += 1
         match[p] /= len(human_bounds)
         np.random.seed(p)
-        perm_bounds = np.random.choice(nTR,K-1,replace=False)
-        # add constraint that if the distance between any pair of boundaries is less than the shortest event across all songs (min_dist = 7TRS) then skip this permutation
-        while np.any(np.diff(np.sort(perm_bounds)) < min_dist) == True or np.any(perm_bounds < min_dist) == True:
-            perm_bounds = np.random.choice(nTR,K-1,replace=False) 
+        perm_bounds = choice_mindist(nTR,K-1,min_dist)
 
     return match
 
