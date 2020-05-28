@@ -2,22 +2,27 @@ from scipy.ndimage import label, generate_binary_structure
 import numpy as np
 import nibabel as nib
 
-datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/'
+datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/ttest_results/'
 
 fn = 'pstats_map_both_runs_w_perms.npy'
 
+mask = nib.load('/jukebox/norman/jamalw/MES/data/mask_nonan.nii.gz')
+
+affine = mask.affine
+
 print("Loading Data")
-zvals = np.load(datadir + 'ttest_results/'+ fn)
+pvals = np.load(datadir + fn)
 max_cluster = np.zeros(1000)
 connectivity = 3
 s = generate_binary_structure(3,connectivity)
 
 for i in range(0,1000):
     print("Copying Data")
-    image = zvals.copy()[:,:,:,i+1]
+    image = pvals.copy()[:,:,:,i+1]
     # use z = 1.96 for p < 0.05 and z = 1.28 for p < 0.1
-    image[zvals[:,:,:,i+1] > 0.1] = 0
-    image[zvals[:,:,:,i+1] <= 0.1] = 1
+    image[pvals[:,:,:,i+1] > 0.05] = 0
+    image[pvals[:,:,:,i+1] <= 0.05] = 1
+    image[mask.get_data() == 0] = 0
     larray, nf = label(image,s)
     cluster_sizes = np.unique(larray[larray>0], return_counts=True)[1]
 
@@ -30,13 +35,14 @@ for i in range(0,1000):
 
 sorted_max_cluster = np.sort(max_cluster)
 # use confidence interval of .95 for p < 0.05 and .90 for p < 0.1
-thresh = sorted_max_cluster[int(len(sorted_max_cluster)*0.90)]
+thresh = sorted_max_cluster[int(len(sorted_max_cluster)*0.95)]
 
-# run clustering on real zvals[:,:,:,0] to get image, larray, cluster_sizes
+# run clustering on real pvals[:,:,:,0] to get image, larray, cluster_sizes
 # use z=1.28 for p < 0.1 and use z=1.96 for p < 0.05
-image = zvals.copy()[:,:,:,0]
-image[zvals[:,:,:,0] > 0.1] = 0
-image[zvals[:,:,:,0] <= 0.1] = 1
+image = pvals.copy()[:,:,:,0]
+image[pvals[:,:,:,0] > 0.05] = 0
+image[pvals[:,:,:,0] <= 0.05] = 1
+image[mask.get_data() == 0] = 0
 larray, nf = label(image,s)
 cluster_sizes = np.unique(larray[larray>0], return_counts=True)[1]
 
@@ -45,9 +51,9 @@ for c in invalid_clusters:
     image[larray == c] = 0
 
 # write image to nifti
-minval = np.min(image[~np.isnan(image)])
-maxval = np.max(image[~np.isnan(image)])
-img = nib.Nifti1Image(image, np.eye(4))
+minval = np.min(image)
+maxval = np.max(image)
+img = nib.Nifti1Image(image, affine=affine)
 img.header['cal_min'] = minval
 img.header['cal_max'] = maxval
-nib.save(img,datadir + 'cluster_corrected_srm_k30_both_runs_p1')
+nib.save(img,'/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/cluster_corrected_p05')
