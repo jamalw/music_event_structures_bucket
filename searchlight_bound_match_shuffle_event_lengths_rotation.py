@@ -126,17 +126,20 @@ def srm(run1,run2):
     print('Building Models')
     n_iter= 10
     srm_k = 30
-    srm_train_run1 = SRM(n_iter=n_iter, features=srm_k)
-    srm_train_run2 = SRM(n_iter=n_iter, features=srm_k)
+    srm_train = SRM(n_iter=n_iter, features=srm_k)
+
+    # concatenate run1 and run2 within subject before fitting SRM
+    runs = []
+    for i in range(len(run1)):
+        runs.append(np.concatenate((run1[i],run2[i]),axis=1))
 
     # fit model to training data
     print('Training Models')
-    srm_train_run1.fit(run1)
-    srm_train_run2.fit(run2)
+    srm_train.fit(runs)
 
     print('Testing Models')
-    shared_data_run1 = stats.zscore(np.dstack(srm_train_run2.transform(run1)),axis=1,ddof=1)
-    shared_data_run2 = stats.zscore(np.dstack(srm_train_run1.transform(run2)),axis=1,ddof=1)
+    shared_data_run1 = stats.zscore(np.dstack(srm_train.transform(run1)),axis=1,ddof=1)
+    shared_data_run2 = stats.zscore(np.dstack(srm_train.transform(run2)),axis=1,ddof=1)
 
     # average test data across subjects
     run1 = np.mean(shared_data_run1,axis=2)

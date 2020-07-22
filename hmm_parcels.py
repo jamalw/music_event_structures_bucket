@@ -23,17 +23,20 @@ def srm(run1,run2):
     print('Building Models')
     n_iter= 50
     srm_k = 30
-    srm_train_run1 = SRM(n_iter=n_iter, features=srm_k)
-    srm_train_run2 = SRM(n_iter=n_iter, features=srm_k)
+    srm_train = SRM(n_iter=n_iter, features=srm_k)
     
+    # concatenate run1 and run2 within subject before fitting SRM
+    runs = []
+    for i in range(len(run1)):
+        runs.append(np.concatenate((run1[i],run2[i]),axis=1))  
+ 
     # fit model to training data
     print('Training Models')
-    srm_train_run1.fit(run1)
-    srm_train_run2.fit(run2)
+    srm_train.fit(runs)
 
     print('Testing Models')
-    shared_data_run1 = stats.zscore(np.dstack(srm_train_run2.transform(run1)),axis=1,ddof=1)
-    shared_data_run2 = stats.zscore(np.dstack(srm_train_run1.transform(run2)),axis=1,ddof=1)
+    shared_data_run1 = stats.zscore(np.dstack(srm_train.transform(run1)),axis=1,ddof=1)
+    shared_data_run2 = stats.zscore(np.dstack(srm_train.transform(run2)),axis=1,ddof=1)
 
     # average test data across subjects
     run1 = np.mean(shared_data_run1,axis=2)
@@ -113,8 +116,6 @@ end_idx_run2   = song_bounds2[songs2.index(song_name) + 1]
 
 subjs = ['MES_022817_0','MES_030217_0','MES_032117_1','MES_040217_0','MES_041117_0','MES_041217_0','MES_041317_0','MES_041417_0','MES_041517_0','MES_042017_0','MES_042317_0','MES_042717_0','MES_050317_0','MES_051317_0','MES_051917_0','MES_052017_0','MES_052017_1','MES_052317_0','MES_052517_0','MES_052617_0','MES_052817_0','MES_052817_1','MES_053117_0','MES_060117_0','MES_060117_1']
 
-subjs = ['MES_022817_0', 'MES_030217_0','MES_032117_1']
-#subj = 'MES_022817_0'
 
 datadir = '/jukebox/norman/jamalw/MES/'
 motion_dir = datadir + '/prototype/link/scripts/data/searchlight_input/'
@@ -129,7 +130,7 @@ parcels = nib.load(datadir + "data/CBIG/stable_projects/brain_parcellation/Schae
 
 run1_masked = []
 run2_masked = []
-indices = np.where((mask_img > 0) & (parcels == 61))
+indices = np.where((mask_img > 0) & (parcels == 39))
 
 for s in range(len(subjs)):
     # Load subjects nifti and motion data then clean (run1)
@@ -159,4 +160,5 @@ data = (data_run1 + data_run2) / 2
 
 print("Fitting HMM")
 SL_match = HMM(data,human_bounds)
-x=10
+
+np.save(datadir + 'prototype/link/scripts/data/parcel_output/prec/' + song_name + '_matches',SL_match)
