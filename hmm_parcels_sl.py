@@ -121,7 +121,7 @@ end_idx_run2   = song_bounds2[songs2.index(song_name) + 1]
 
 #subjs = ['MES_022817_0','MES_030217_0','MES_032117_1','MES_040217_0','MES_041117_0','MES_041217_0','MES_041317_0','MES_041417_0','MES_041517_0','MES_042017_0','MES_042317_0','MES_042717_0','MES_050317_0','MES_051317_0','MES_051917_0','MES_052017_0','MES_052017_1','MES_052317_0','MES_052517_0','MES_052617_0','MES_052817_0','MES_052817_1','MES_053117_0','MES_060117_0','MES_060117_1']
 
-subjs = ['MES_022817_0','MES_030217_0']
+subjs = ['MES_022817_0','MES_030217_0', 'MES_032117_1','MES_040217_0','MES_041117_0']
 
 datadir = '/jukebox/norman/jamalw/MES/'
 motion_dir = datadir + '/prototype/link/scripts/data/searchlight_input/'
@@ -140,7 +140,8 @@ parcels = nib.load(datadir + "data/CBIG/stable_projects/brain_parcellation/Schae
 pvals = np.zeros_like(mask_img.get_data(),dtype=float)
 match = np.zeros_like(mask_img.get_data())
 
-for i in range(int(np.max(parcels))):
+for i in range(3):
+#for i in range(int(np.max(parcels))):
     # get indices where mask and parcels overlap
     indices = np.where((mask_img.get_data() > 0) & (parcels == i + 1))
 
@@ -193,6 +194,6 @@ savedir = "/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_ou
 pfn = savedir + "/pvals"
 mfn = savedir + "/match_scores"
 
-save_nifti(pvals, mask.affine, pfn) 
-save_nifti(match, mask.affine, mfn)
+save_nifti(pvals, mask_img.affine, pfn) 
+save_nifti(match, mask_img.affine, mfn)
 
