@@ -1,0 +1,201 @@
+import numpy as np
+import sys
+import nibabel as nib
+from scipy.spatial import distance
+import brainiak.eventseg.event
+from scipy.stats import norm,zscore,pearsonr,stats
+from brainiak.funcalign.srm import SRM
+import os
+from sklearn import linear_model
+
+idx = int(sys.argv[1])
+
+def clean_data(data,motion):
+    nTR = data.shape[1]
+    motion = motion.T
+    regr = linear_model.LinearRegression()
+    regr.fit(motion[:,0:nTR].T, data[:,:].T)
+    clean_data = data[:,:] - np.dot(regr.coef_, motion[:,0:nTR]) - regr.intercept_[:, np.newaxis]
+    return clean_data  
+
+def srm(run1,run2):
+    # initialize model
+    print('Building Models')
+    n_iter= 50
+    srm_k = 30
+    srm_train = SRM(n_iter=n_iter, features=srm_k)
+    
+    # concatenate run1 and run2 within subject before fitting SRM
+    runs = []
+    for i in range(len(run1)):
+        runs.append(np.concatenate((run1[i],run2[i]),axis=1))  
+ 
+    # fit model to training data
+    print('Training Models')
+    srm_train.fit(runs)
+
+    print('Testing Models')
+    shared_data_run1 = stats.zscore(np.dstack(srm_train.transform(run1)),axis=1,ddof=1)
+    shared_data_run2 = stats.zscore(np.dstack(srm_train.transform(run2)),axis=1,ddof=1)
+
+    # average test data across subjects
+    run1 = np.mean(shared_data_run1,axis=2)
+    run2 = np.mean(shared_data_run2, axis=2)
+
+    return run1, run2
+   
+def save_nifti(data,affine,savedir):
+    minval = np.min(data)
+    maxval = np.max(data)
+    img = nib.Nifti1Image(data,affine)
+    img.header["cal_min"] = minval
+    img.header["cal_max"] = maxval
+    nib.save(img, savedir)
+ 
+def HMM(X,human_bounds):
+
+    """fit hidden markov model
+  
+       Fit HMM to average data and cross-validate with leftout subject using within song and between song average correlations              
+
+       Parameters
+       ----------
+       A: voxel by time ndarray (2D)
+       B: voxel by time ndarray (2D)
+       C: voxel by time ndarray (2D)
+       D: voxel by time ndarray (2D)
+       K: # of events for HMM (scalar)
+ 
+       Returns
+       -------
+       z: z-score after performing permuted cross-validation analysis      
+
+    """
+
+    # Fit to all but one subject
+    nPerm=1000
+    K = len(human_bounds) + 1
+    ev = brainiak.eventseg.event.EventSegment(K)
+    ev.fit(X.T)
+    bounds = np.where(np.diff(np.argmax(ev.segments_[0],axis=1)))[0]
+    match = np.zeros(nPerm+1)
+    events = np.argmax(ev.segments_[0],axis=1)
+    _, event_lengths = np.unique(events, return_counts=True)
+    perm_bounds = bounds.copy()
+    nTR = X.shape[1] 
+
+    for p in range(nPerm+1):
+        match[p] = sum([np.min(np.abs(perm_bounds - hb)) for hb in human_bounds])
+        np.random.seed(p)
+        perm_lengths = np.random.permutation(event_lengths)
+        events = np.zeros(nTR, dtype=np.int)
+        events[np.cumsum(perm_lengths[:-1])] = 1
+        # pick number of timepoints to rotate by  
+        nrot = np.random.randint(len(events))
+        # convert events to list to allow combining lists in next step
+        events_lst = list(events)
+        # rotate boundaries
+        events_rot = np.array(events_lst[-nrot:] + events_lst[:-nrot])
+        # select indexes for new boundaries
+        perm_bounds = np.where(events_rot == 1)[0]
+
+    return match
+
+
+# run 1 times
+song_bounds1 = np.array([0,225,314,494,628,718,898,1032,1122,1301,1436,1660,1749,1973, 2198,2377,2511])
+
+songs1 = ['Finlandia', 'Blue_Monk', 'I_Love_Music','Waltz_of_Flowers','Capriccio_Espagnole','Island','All_Blues','St_Pauls_Suite','Moonlight_Sonata','Symphony_Fantastique','Allegro_Moderato','Change_of_the_Guard','Boogie_Stop_Shuffle','My_Favorite_Things','The_Bird','Early_Summer']
+
+
+# get song start time and end time for run 1
+start_idx_run1 = song_bounds1[idx]
+end_idx_run1   = song_bounds1[idx+1] 
+
+# run 2 times
+song_bounds2 = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
+
+songs2 = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
+
+# get song start time and end time for run 2
+song_name = songs1[idx]
+start_idx_run2 = song_bounds2[songs2.index(song_name)]
+end_idx_run2   = song_bounds2[songs2.index(song_name) + 1]  
+
+#subjs = ['MES_022817_0','MES_030217_0','MES_032117_1','MES_040217_0','MES_041117_0','MES_041217_0','MES_041317_0','MES_041417_0','MES_041517_0','MES_042017_0','MES_042317_0','MES_042717_0','MES_050317_0','MES_051317_0','MES_051917_0','MES_052017_0','MES_052017_1','MES_052317_0','MES_052517_0','MES_052617_0','MES_052817_0','MES_052817_1','MES_053117_0','MES_060117_0','MES_060117_1']
+
+subjs = ['MES_022817_0','MES_030217_0']
+
+datadir = '/jukebox/norman/jamalw/MES/'
+motion_dir = datadir + '/prototype/link/scripts/data/searchlight_input/'
+
+mask_img = nib.load(datadir + 'data/mask_nonan.nii')
+
+hrf = 5
+
+# load human boundaries
+human_bounds = np.load(datadir + 'prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + song_name + '/' + song_name + '_beh_seg.npy') + hrf
+
+# load parcellations
+parcels = nib.load(datadir + "data/CBIG/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI/Schaefer2018_200Parcels_17Networks_order_FSLMNI152_2mm.nii.gz").get_data()
+
+# create brain-like object to store data into
+pvals = np.zeros_like(mask_img.get_data(),dtype=float)
+match = np.zeros_like(mask_img.get_data())
+
+for i in range(int(np.max(parcels))):
+    # get indices where mask and parcels overlap
+    indices = np.where((mask_img.get_data() > 0) & (parcels == i + 1))
+
+    # initialize list for storing masked data across subjects
+    run1_masked = []
+    run2_masked = []
+
+    for s in range(len(subjs)):
+        # Load subjects nifti and motion data then clean (run1)
+        print("Loading Run1 BOLD subj num: " + str(s+1))
+        run1 = nib.load(datadir + 'subjects/' + subjs[s] + '/analysis/run1.feat/trans_filtered_func_data.nii').get_data()[:,:,:,0:2511]
+        print("Loading Run1 Motion Regressors")
+        motion_run1 = np.genfromtxt(motion_dir + subjs[s] + '/EPI_mcf1.par')
+        print("Cleaning Run1 BOLD Data")
+        clean_run1 = stats.zscore(clean_data(run1[indices][:], motion_run1), axis=1, ddof=1)
+        run1_masked.append(run1[indices][:])
+   
+        # Load subjects nifti and motion data then clean (run2)
+        print("Loading Run2 BOLD subj num: " + str(s+1)) 
+        run2 = nib.load(datadir + 'subjects/' + subjs[s] + '/analysis/run2.feat/trans_filtered_func_data.nii').get_data()[:,:,:,0:2511]
+        print("Loading Run2 Motion Regressors")
+        motion_run2 = np.genfromtxt(motion_dir + subjs[s] + '/EPI_mcf2.par')
+        print("Cleaning Run2 BOLD Data")
+        clean_run2 = stats.zscore(clean_data(run2[indices][:], motion_run2), axis=1, ddof=1)
+        run2_masked.append(run2[indices][:])
+    
+    # run SRM on masked data
+    run1_SRM, run2_SRM = srm(run1_masked,run2_masked)
+
+    # get song data from each run
+    data_run1 = run1_SRM[:,start_idx_run1:end_idx_run1]
+    data_run2 = run2_SRM[:,start_idx_run2:end_idx_run2]
+
+    # average song data between two runs
+    data = (data_run1 + data_run2) / 2
+
+    # fit HMM to song data and return match data where first entry is true match score and all others are permutation scores
+    print("Fitting HMM")
+    SL_match = HMM(data,human_bounds)
+    
+    # compute p-value
+    match_p = (np.sum(SL_match[1:] <= SL_match[0]) + 1) / (len(SL_match))
+
+    # fit match score and pvalue into brain
+    pvals[indices] = match_p  
+    match[indices] = SL_match[0] 
+
+savedir = "/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/parcels/Schaefer200/" + song_name
+
+pfn = savedir + "/pvals"
+mfn = savedir + "/match_scores"
+
+save_nifti(pvals, mask.affine, pfn) 
+save_nifti(match, mask.affine, pfn)
+
