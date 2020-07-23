@@ -23,20 +23,17 @@ def srm(run1,run2):
     print('Building Models')
     n_iter= 50
     srm_k = 30
-    srm_train = SRM(n_iter=n_iter, features=srm_k)
-    
-    # concatenate run1 and run2 within subject before fitting SRM
-    runs = []
-    for i in range(len(run1)):
-        runs.append(np.concatenate((run1[i],run2[i]),axis=1))  
- 
+    srm_train_run1 = SRM(n_iter=n_iter, features=srm_k)
+    srm_train_run2 = SRM(n_iter=n_iter, features=srm_k)    
+
     # fit model to training data
     print('Training Models')
-    srm_train.fit(runs)
+    srm_train_run1.fit(run1)
+    srm_train_run2.fit(run2)
 
     print('Testing Models')
-    shared_data_run1 = stats.zscore(np.dstack(srm_train.transform(run1)),axis=1,ddof=1)
-    shared_data_run2 = stats.zscore(np.dstack(srm_train.transform(run2)),axis=1,ddof=1)
+    shared_data_run1 = stats.zscore(np.dstack(srm_train_run2.transform(run1)),axis=1,ddof=1)
+    shared_data_run2 = stats.zscore(np.dstack(srm_train_run1.transform(run2)),axis=1,ddof=1)
 
     # average test data across subjects
     run1 = np.mean(shared_data_run1,axis=2)
@@ -126,11 +123,11 @@ mask_reshape = np.reshape(mask_img,(91*109*91))
 hrf = 5
 human_bounds = np.load(datadir + 'prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + song_name + '/' + song_name + '_beh_seg.npy') + hrf
 
-parcels = nib.load(datadir + "data/CBIG/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI/Schaefer2018_100Parcels_17Networks_order_FSLMNI152_2mm.nii.gz").get_data()
+parcels = nib.load(datadir + "data/CBIG/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI/Schaefer2018_200Parcels_17Networks_order_FSLMNI152_2mm.nii.gz").get_data()
 
 run1_masked = []
 run2_masked = []
-indices = np.where((mask_img > 0) & (parcels == 39))
+indices = np.where((mask_img > 0) & (parcels == 77))
 
 for s in range(len(subjs)):
     # Load subjects nifti and motion data then clean (run1)
@@ -161,4 +158,4 @@ data = (data_run1 + data_run2) / 2
 print("Fitting HMM")
 SL_match = HMM(data,human_bounds)
 
-np.save(datadir + 'prototype/link/scripts/data/parcel_output/prec/' + song_name + '_matches',SL_match)
+np.save(datadir + 'prototype/link/scripts/data/parcel_output/prec_Schaefer_200/' + song_name + '_matches',SL_match)
