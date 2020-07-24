@@ -26,7 +26,7 @@ srm_k = 30
 hrf = 5
 
 datadir = '/jukebox/norman/jamalw/MES/'
-mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
+mask_img = load_img(datadir + 'data/zstats_human_bounds_right_A1_mask_version2_bin.nii.gz')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
@@ -101,20 +101,6 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
         vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1) 
     return vox_z,voxmean
 
-def choice_mindist(T,n,mindist):
-    bounds = np.zeros(T)
-    bounds[0:mindist] = -1
-    bounds[(T-mindist+1):T] = -1
-    for i in range(n):
-        b = np.random.choice(np.where(bounds==0)[0],1)[0]
-        bounds[b] = 1
-        for offset in range(1, mindist):
-            if b-offset >= 0: 
-                bounds[b-offset] = -1
-            if b+offset <= T-1:
-                bounds[b+offset] = -1
-    return np.where(bounds==1)[0] 
-
 def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     
     """fit hidden markov model
@@ -156,7 +142,6 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     bounds = np.where(np.diff(np.argmax(ev.segments_[0],axis=1)))[0] 
     match = np.zeros(nPerm+1)
     perm_bounds = bounds.copy()
-    min_dist = 7
 
     for p in range(nPerm+1):
         for hb in human_bounds:
@@ -164,7 +149,7 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
                 match[p] += 1
         match[p] /= len(human_bounds)
         np.random.seed(p)
-        perm_bounds = choice_mindist(nTR,K-1,min_dist)
+        perm_bounds = np.random.choice(nTR,K-1,replace=False) 
 
     return match
 
@@ -190,8 +175,8 @@ for j in range(voxmean.shape[1]):
  
 print('Saving data to Searchlight Folder')
 print(songs[song_idx])
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_train_run1_min_dist7', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_train_run1_min_dist7', results3d)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_train_run1_no_motion_min_dist7', results3d_perms)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run1_no_motion', results3d_real)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run1_no_motion', results3d)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_fit_run1_no_motion', results3d_perms)
 
 
