@@ -3,11 +3,11 @@ import brainiak.eventseg.event
 from scipy.stats import norm,zscore,pearsonr,stats
 from nilearn.image import load_img
 import sys
-from brainiak.funcalign.srm import SRM
 import nibabel as nib
 import os
 from scipy.spatial import distance
 from sklearn import linear_model
+import srm
 
 subjs = ['MES_022817_0','MES_030217_0','MES_032117_1','MES_040217_0','MES_041117_0','MES_041217_0','MES_041317_0','MES_041417_0','MES_041517_0','MES_042017_0','MES_042317_0','MES_042717_0','MES_050317_0','MES_051317_0','MES_051917_0','MES_052017_0','MES_052017_1','MES_052317_0','MES_052517_0','MES_052617_0','MES_052817_0','MES_052817_1','MES_053117_0','MES_060117_0','MES_060117_1']
 song_idx = int(sys.argv[1])
@@ -33,7 +33,7 @@ start_idx_run2 = song_bounds2[songs2.index(song_name)]
 end_idx_run2   = song_bounds2[songs2.index(song_name) + 1]
 
 datadir = '/jukebox/norman/jamalw/MES/'
-mask_img = load_img(datadir + 'data/mask_nonan.nii')
+mask_img = load_img(datadir + 'data/zstats_human_bounds_right_A1_mask_version2_bin.nii.gz')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
@@ -121,32 +121,6 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,start_idx_run1, end_idx_
 
     return vox_p,voxmean
 
-def srm(run1,run2):
-    # initialize model
-    print('Building Models')
-    n_iter= 10
-    srm_k = 30
-    srm_train = SRM(n_iter=n_iter, features=srm_k)
-
-    # concatenate run1 and run2 within subject before fitting SRM
-    runs = []
-    for i in range(len(run1)):
-        runs.append(np.concatenate((run1[i],run2[i]),axis=1))
-
-    # fit model to training data
-    print('Training Models')
-    srm_train.fit(runs)
-
-    print('Testing Models')
-    shared_data_run1 = stats.zscore(np.dstack(srm_train.transform(run1)),axis=1,ddof=1)
-    shared_data_run2 = stats.zscore(np.dstack(srm_train.transform(run2)),axis=1,ddof=1)
-
-    # average test data across subjects
-    run1 = np.mean(shared_data_run1,axis=2)
-    run2 = np.mean(shared_data_run2, axis=2)
-
-    return run1, run2
-
 def HMM(X,human_bounds,song_idx,start_idx_run1, end_idx_run1, start_idx_run2, end_idx_run2, srm_k,hrf):
     
     """fit hidden markov model
@@ -171,7 +145,7 @@ def HMM(X,human_bounds,song_idx,start_idx_run1, end_idx_run1, start_idx_run2, en
     nPerm = 1000
     run1 = [X[i] for i in np.arange(0, int(len(X)/2))]
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
-    run1_SRM, run2_SRM = srm(run1,run2)
+    run1_SRM, run2_SRM = srm.SRM_V3(run1,run2,srm_k, n_iter=10)
     data_run1 = run1_SRM[:,start_idx_run1:end_idx_run1]
     data_run2 = run2_SRM[:,start_idx_run2:end_idx_run2]
     data = (data_run1 + data_run2) / 2
@@ -226,8 +200,8 @@ for j in range(voxmean.shape[1]):
  
 print('Saving data to Searchlight Folder')
 print(song_name)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_train_both_runs_pvals', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_train_both_runs_pvals', results3d)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_train_both_runs_pvals', results3d_perms)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/raw/globals_raw_srm_V2_train_both_runs_pvals', results3d_real)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/zscores/globals_z_srm_V2_train_both_runs_pvals', results3d)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/perms/globals_z_srm_V2_train_both_runs_pvals', results3d_perms)
 
 
