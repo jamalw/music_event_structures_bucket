@@ -33,7 +33,7 @@ start_idx_run2 = song_bounds2[songs2.index(song_name)]
 end_idx_run2   = song_bounds2[songs2.index(song_name) + 1]
 
 datadir = '/jukebox/norman/jamalw/MES/'
-mask_img = load_img(datadir + 'data/zstats_human_bounds_right_A1_mask_version2_bin.nii.gz')
+mask_img = load_img(datadir + 'data/mask_nonan.nii')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
@@ -200,8 +200,8 @@ for j in range(voxmean.shape[1]):
  
 print('Saving data to Searchlight Folder')
 print(song_name)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/raw/globals_raw_srm_V2_train_both_runs_pvals', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/zscores/globals_z_srm_V2_train_both_runs_pvals', results3d)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/perms/globals_z_srm_V2_train_both_runs_pvals', results3d_perms)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/raw/globals_raw_srm_V3_train_both_runs_pvals', results3d_real)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/zscores/globals_srm_V3_train_both_runs_pvals', results3d)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/perms/globals_srm_V3_train_both_runs_pvals', results3d_perms)
 
 
