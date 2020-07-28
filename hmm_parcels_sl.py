@@ -4,35 +4,12 @@ import nibabel as nib
 from scipy.spatial import distance
 import brainiak.eventseg.event
 from scipy.stats import norm,zscore,pearsonr,stats
-from brainiak.funcalign.srm import SRM
 import os
 from sklearn import linear_model
+import srm
 
 idx = int(sys.argv[1])
 
-def srm(run1,run2):
-    # initialize model
-    print('Building Models')
-    n_iter= 50
-    srm_k = 30
-    srm_train_run1 = SRM(n_iter=n_iter, features=srm_k)
-    srm_train_run2 = SRM(n_iter=n_iter, features=srm_k)    
-    
-    # fit model to training data
-    print('Training Models')
-    srm_train_run1.fit(run1)
-    srm_train_run2.fit(run2)
-
-    print('Testing Models')
-    shared_data_run1 = stats.zscore(np.dstack(srm_train_run2.transform(run1)),axis=1,ddof=1)
-    shared_data_run2 = stats.zscore(np.dstack(srm_train_run1.transform(run2)),axis=1,ddof=1)
-
-    # average test data across subjects
-    run1 = np.mean(shared_data_run1,axis=2)
-    run2 = np.mean(shared_data_run2, axis=2)
-
-    return run1, run2
-   
 def save_nifti(data,affine,savedir):
     minval = np.min(data)
     maxval = np.max(data)
@@ -139,7 +116,7 @@ for i in range(int(np.max(parcels))):
     run2_SRM = np.load(parcel_dir + "parcel" + str(i+1) + "_run2.npy")
     
     # run SRM on masked data
-    run1_SRM, run2_SRM = srm(run1_masked,run2_masked)
+    run1_SRM, run2_SRM = SRM_V2(run1_masked,run2_masked)
 
     # get song data from each run
     data_run1 = run1_SRM[:,start_idx_run1:end_idx_run1]
