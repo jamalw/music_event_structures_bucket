@@ -27,6 +27,7 @@ mask_img = nib.load(datadir + 'data/mask_nonan.nii')
 # load parcellations
 parcels = nib.load(datadir + "data/CBIG/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI/Schaefer2018_200Parcels_17Networks_order_FSLMNI152_2mm.nii.gz").get_data()
 
+savedir = "/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_input/parcels/Schaefer200/"
 
 for i in range(int(np.max(parcels))):
     print("Parcel Num: ", str(i+1))
@@ -56,7 +57,6 @@ for i in range(int(np.max(parcels))):
         clean_run2 = stats.zscore(clean_data(run2[indices][:], motion_run2), axis=1, ddof=1)
         run2_masked.append(clean_run2[indices][:])
             
-savedir = "/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_input/parcels/Schaefer200/"
 
     np.save(savedir + "parcel" + str(i+1) + "_run1", run1_masked)
     np.save(savedir + "parcel" + str(i+1) + "_run2", run2_masked)
