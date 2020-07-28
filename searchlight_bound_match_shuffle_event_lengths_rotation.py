@@ -26,7 +26,7 @@ srm_k = 30
 hrf = 5
 
 datadir = '/jukebox/norman/jamalw/MES/'
-mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
+mask_img = load_img(datadir + 'data/mask_nonan.nii')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
@@ -149,10 +149,7 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     perm_bounds = bounds.copy()
 
     for p in range(nPerm+1):
-        for hb in human_bounds:
-            if np.any(np.abs(perm_bounds - hb) <= w):
-                match[p] += 1
-        match[p] /= len(human_bounds)
+        match[p] = sum([np.min(np.abs(perm_bounds - hb)) for hb in human_bounds])
         np.random.seed(p)
         perm_lengths = np.random.permutation(event_lengths)
         events = np.zeros(nTR, dtype=np.int)
@@ -190,8 +187,8 @@ for j in range(voxmean.shape[1]):
  
 print('Saving data to Searchlight Folder')
 print(songs[song_idx])
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_train_run2', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_train_run2', results3d)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_train_run2', results3d_perms)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_train_run2_euclidean1', results3d_real)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_train_run2_euclidean1', results3d)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_train_run2_euclidean1', results3d_perms)
 
 
