@@ -6,7 +6,8 @@ import brainiak.eventseg.event
 from scipy.stats import norm,zscore,pearsonr,stats
 import os
 from sklearn import linear_model
-import srm
+from srm import SRM_V2
+import scipy.stats as st
 
 idx = int(sys.argv[1])
 
@@ -16,6 +17,7 @@ def save_nifti(data,affine,savedir):
     img = nib.Nifti1Image(data,affine)
     img.header["cal_min"] = minval
     img.header["cal_max"] = maxval
+    img.header.set_data_dtype(np.float64)
     nib.save(img, savedir)
  
 def HMM(X,human_bounds):
@@ -40,6 +42,7 @@ def HMM(X,human_bounds):
 
     # Fit to all but one subject
     nPerm=1000
+    w = 3
     K = len(human_bounds) + 1
     ev = brainiak.eventseg.event.EventSegment(K)
     ev.fit(X.T)
@@ -51,7 +54,12 @@ def HMM(X,human_bounds):
     nTR = X.shape[1] 
 
     for p in range(nPerm+1):
-        match[p] = sum([np.min(np.abs(perm_bounds - hb)) for hb in human_bounds])
+        #match[p] = sum([np.min(np.abs(perm_bounds - hb)) for hb in human_bounds])
+        for hb in human_bounds:
+            if np.any(np.abs(perm_bounds - hb) <= w):
+                match[p] += 1
+        match[p] /= len(human_bounds)
+ 
         np.random.seed(p)
         perm_lengths = np.random.permutation(event_lengths)
         events = np.zeros(nTR, dtype=np.int)
@@ -93,11 +101,14 @@ datadir = '/jukebox/norman/jamalw/MES/'
 mask_img = nib.load(datadir + 'data/mask_nonan.nii')
 
 hrf = 5
+n_iter = 50
+srm_k = 30
 
 # load human boundaries
 human_bounds = np.load(datadir + 'prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + song_name + '/' + song_name + '_beh_seg.npy') + hrf
 
-# load parcellations
+#human_bounds = np.array([12,25,58,69,98,104,139,165,194,203,209,222])
+
 parcels = nib.load(datadir + "data/CBIG/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI/Schaefer2018_200Parcels_17Networks_order_FSLMNI152_2mm.nii.gz").get_data()
 
 # create brain-like object to store data into
@@ -107,16 +118,17 @@ match = np.zeros_like(mask_img.get_data())
 parcel_dir = datadir + "prototype/link/scripts/data/searchlight_input/parcels/Schaefer200/"
 
 for i in range(int(np.max(parcels))):
+#for i in [124]:
     print("Parcel Num: ", str(i+1))
     # get indices where mask and parcels overlap
     indices = np.where((mask_img.get_data() > 0) & (parcels == i + 1))
 
     # initialize list for storing masked data across subjects
-    run1_SRM = np.load(parcel_dir + "parcel" + str(i+1) + "_run1.npy")
-    run2_SRM = np.load(parcel_dir + "parcel" + str(i+1) + "_run2.npy")
+    run1 = np.load(parcel_dir + "parcel" + str(i+1) + "_run1.npy")
+    run2 = np.load(parcel_dir + "parcel" + str(i+1) + "_run2.npy")
     
     # run SRM on masked data
-    run1_SRM, run2_SRM = SRM_V2(run1_masked,run2_masked)
+    run1_SRM, run2_SRM = SRM_V2(run1,run2,srm_k,n_iter)
 
     # get song data from each run
     data_run1 = run1_SRM[:,start_idx_run1:end_idx_run1]
@@ -128,13 +140,19 @@ for i in range(int(np.max(parcels))):
     # fit HMM to song data and return match data where first entry is true match score and all others are permutation scores
     print("Fitting HMM")
     SL_match = HMM(data,human_bounds)
+   
+    # compute z-score
+    match_z = (SL_match[0] - np.mean(SL_match[1:])) / (np.std(SL_match[1:]))
     
+    # convert z-score to p-value
+    match_p =  st.norm.sf(match_z)
+ 
     # compute p-value
-    match_p = (np.sum(SL_match[1:] <= SL_match[0]) + 1) / (len(SL_match))
+    #match_p = (np.sum(SL_match[1:] <= SL_match[0]) + 1) / (len(SL_match))
 
     # fit match score and pvalue into brain
     pvals[indices] = match_p  
-    match[indices] = SL_match[0] 
+    match[indices] = match_z 
 
 savedir = "/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/parcels/Schaefer200/" + song_name
 
