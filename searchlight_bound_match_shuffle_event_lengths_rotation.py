@@ -27,13 +27,13 @@ songs2 = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_G
 
 song_name = songs1[song_idx]
 srm_k = 30
-hrf = 5
+hrf = 4
 
 start_idx_run2 = song_bounds2[songs2.index(song_name)]
 end_idx_run2   = song_bounds2[songs2.index(song_name) + 1]
 
 datadir = '/jukebox/norman/jamalw/MES/'
-mask_img = load_img(datadir + 'data/zstats_human_bounds_right_A1_mask_version2_bin.nii.gz')
+mask_img = load_img(datadir + 'data/mask_nonan.nii')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
@@ -113,13 +113,15 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,start_idx_run1, end_idx_
        vox_SLcount[SL_allvox[sl]] += 1
     voxmean = voxmean / vox_SLcount[:,np.newaxis]
     # initialize array to store statistics (e.g. z-scores, p-values, etc.)
-    vox_p = np.zeros((coords.shape[0], nPerm+1))
-  
+    #vox_p = np.zeros((coords.shape[0], nPerm+1))
+    vox_z = np.zeros((coords.shape[0], nPerm+1))  
+
     # compute statistics for each column where the first column gets all voxels' true statistics and every other column contains voxels' statistics for the permutations  
     for p in range(nPerm+1):
-        vox_p[:,p] = (np.sum(voxmean[:,1:] <= voxmean[:,p][:,np.newaxis],axis=1) + 1) / (voxmean[:,1:].shape[1] + 1) 
+        #vox_p[:,p] = (np.sum(voxmean[:,1:] <= voxmean[:,p][:,np.newaxis],axis=1) + 1) / (voxmean[:,1:].shape[1] + 1) 
+        vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1)
 
-    return vox_p,voxmean
+    return vox_z,voxmean
 
 def HMM(X,human_bounds,song_idx,start_idx_run1, end_idx_run1, start_idx_run2, end_idx_run2, srm_k,hrf):
     
@@ -162,7 +164,12 @@ def HMM(X,human_bounds,song_idx,start_idx_run1, end_idx_run1, start_idx_run2, en
     perm_bounds = bounds.copy()
 
     for p in range(nPerm+1):
-        match[p] = sum([np.min(np.abs(perm_bounds - hb)) for hb in human_bounds])
+        #match[p] = sum([np.min(np.abs(perm_bounds - hb)) for hb in human_bounds])
+        #match[p] = np.sqrt(sum([np.min((perm_bounds - hb)**2) for hb in human_bounds]))
+        for hb in human_bounds:
+            if np.any(np.abs(perm_bound - hb) <= w):
+                match[p] += 1
+        match[p] /= len(human_bounds)
         np.random.seed(p)
         perm_lengths = np.random.permutation(event_lengths)
         events = np.zeros(nTR, dtype=np.int)
@@ -200,8 +207,8 @@ for j in range(voxmean.shape[1]):
  
 print('Saving data to Searchlight Folder')
 print(song_name)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/raw/globals_raw_srm_V2_train_both_runs_pvals', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/zscores/globals_z_srm_V2_train_both_runs_pvals', results3d)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/perms/globals_z_srm_V2_train_both_runs_pvals', results3d_perms)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/raw/globals_raw_srm_V3_train_both_runs_3TRs', results3d_real)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/zscores/globals_srm_V3_train_both_runs_zscores_3TRs', results3d)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_bound_match_shuffle_event_lengths_rotation/' + song_name +'/perms/globals_srm_V3_train_both_runs_3TRs', results3d_perms)
 
 
