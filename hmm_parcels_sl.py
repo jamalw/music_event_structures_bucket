@@ -57,11 +57,11 @@ def HMM(X,human_bounds):
 
     for p in range(nPerm+1):
         #match[p] = sum([np.min(np.abs(perm_bounds - hb)) for hb in human_bounds])
-        #match[p] = np.sqrt(sum([np.min((perm_bounds - hb)**2) for hb in human_bounds]))
-        for hb in human_bounds:
-            if np.any(np.abs(perm_bounds - hb) <= w):
-                match[p] += 1
-        match[p] /= len(human_bounds)
+        match[p] = np.sqrt(sum([np.min((perm_bounds - hb)**2) for hb in human_bounds]))
+        #for hb in human_bounds:
+        #    if np.any(np.abs(perm_bounds - hb) <= w):
+        #        match[p] += 1
+        #match[p] /= len(human_bounds)
  
         np.random.seed(p)
         perm_lengths = np.random.permutation(event_lengths)
@@ -78,7 +78,7 @@ def HMM(X,human_bounds):
 
     return match
 
-hrf = 4
+hrf = 5
 
 if runNum == 0:
     # run 1 times
@@ -143,25 +143,25 @@ for i in range(int(np.max(parcels))):
     SL_match = HMM(data,human_bounds)
    
     # compute z-score
-    match_z = (SL_match[0] - np.mean(SL_match[1:])) / (np.std(SL_match[1:]))
+    #match_z = (SL_match[0] - np.mean(SL_match[1:])) / (np.std(SL_match[1:]))
     
     # convert z-score to p-value
-    match_p =  st.norm.sf(match_z)
+    #match_p =  st.norm.sf(match_z)
  
     # compute p-value
-    #match_p = (np.sum(SL_match[1:] <= SL_match[0]) + 1) / (len(SL_match))
+    match_p = (np.sum(SL_match[1:] >= SL_match[0]) + 1) / (len(SL_match))
 
     # fit match score and pvalue into brain
     pvals[indices] = match_p  
-    match[indices] = match_z 
+    match[indices] = SL_match[0] 
 
 
 if runNum == 0:
-    pfn = savedir + "/pvals_srm_v1_test_run2"
-    mfn = savedir + "/match_scores_srm_v1_test_run2"
+    pfn = savedir + "/pvals_srm_v1_test_run2_euclid"
+    mfn = savedir + "/match_scores_srm_v1_test_run2_euclid"
 elif runNum == 1:
-    pfn = savedir + "/pvals_srm_v1_test_run1"
-    mfn = savedir + "/match_scores_srm_v1_test_run1"
+    pfn = savedir + "/pvals_srm_v1_test_run1_euclid"
+    mfn = savedir + "/match_scores_srm_v1_test_run1_euclid"
 
 
 save_nifti(pvals, mask_img.affine, pfn) 
