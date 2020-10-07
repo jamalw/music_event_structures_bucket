@@ -10,6 +10,9 @@ import numpy as np
 from brainiak.funcalign.srm import SRM
 import sys
 
+# Custom mean estimator with Fisher z transformation for correlations
+def fisher_mean(correlation, axis=None):
+    return np.tanh(np.mean(np.arctanh(correlation), axis=axis))
 
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/chris_dartmouth/data/'
 ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/'
@@ -50,7 +53,7 @@ for i in range(0,nSubj):
 
 run1_list_orig = run1_list.copy()
 run2_list_orig = run2_list.copy()
-nboot = 50
+nboot = 1000
 
 wVa_results = np.zeros((16,len(K_set),nboot))
 
@@ -115,8 +118,8 @@ for b in range(nboot):
                       
                     # Compute within vs across boundary correlations
                     same_event = events[:,np.newaxis] == events
-                    within = cc[same_event*local_mask].mean()
-                    across = cc[(~same_event)*local_mask].mean()
+                    within = fisher_mean(cc[same_event*local_mask])
+                    across = fisher_mean(cc[(~same_event)*local_mask])
                     within_across = within - across
                     wVa_results[i,j,b] = within_across
 
