@@ -56,11 +56,11 @@ def HMM(X,human_bounds):
 
     for p in range(nPerm+1):
         #match[p] = sum([np.min(np.abs(perm_bounds - hb)) for hb in human_bounds])
-        match[p] = np.sqrt(sum([np.min((perm_bounds - hb)**2) for hb in human_bounds]))
-        #for hb in human_bounds:
-        #    if np.any(np.abs(perm_bounds - hb) <= w):
-        #        match[p] += 1
-        #match[p] /= len(human_bounds)
+        #match[p] = np.sqrt(sum([np.min((perm_bounds - hb)**2) for hb in human_bounds]))
+        for hb in human_bounds:
+            if np.any(np.abs(perm_bounds - hb) <= w):
+                match[p] += 1
+        match[p] /= len(human_bounds)
  
         np.random.seed(p)
         perm_bounds = np.random.choice(nTR,K-1,replace=False)
@@ -129,7 +129,8 @@ for i in range(int(np.max(parcels))):
     mfcc2   = np.load(feature_dir + 'mfccRun2_hrf.npy')[0:12,:]
     tempo1  = np.load(feature_dir + 'tempoRun1_hrf.npy')[1:,:]
     tempo2  = np.load(feature_dir + 'tempoRun2_hrf.npy')[1:,:]
-    fullRegs = np.vstack((chroma1,mfcc1,tempo1))
+    fullRegs1 = np.vstack((chroma1,mfcc1,tempo1))
+    fullRegs2 = np.vstack((chroma2,mfcc2,tempo2))
 
     run1_regress = []
     run2_regress = []
@@ -137,12 +138,12 @@ for i in range(int(np.max(parcels))):
     for s in range(run1.shape[0]):
         # remove music features from run1
         regr1 = linear_model.LinearRegression()
-        regr1.fit(fullRegs.T,run1[s,:,:].T)
-        run1_regress.append(run1[s,:,:] - np.dot(regr1.coef_, fullRegs) - regr1.intercept_[:, np.newaxis])
+        regr1.fit(fullRegs1.T,run1[s,:,:].T)
+        run1_regress.append(run1[s,:,:] - np.dot(regr1.coef_, fullRegs1) - regr1.intercept_[:, np.newaxis])
         # remove music features from run 2
         regr2 = linear_model.LinearRegression()
-        regr2.fit(fullRegs.T,run2[s,:,:].T)
-        run2_regress.append(run2[s,:,:] - np.dot(regr2.coef_, fullRegs) - regr2.intercept_[:, np.newaxis])
+        regr2.fit(fullRegs2.T,run2[s,:,:].T)
+        run2_regress.append(run2[s,:,:] - np.dot(regr2.coef_, fullRegs2) - regr2.intercept_[:, np.newaxis])
 
     # run SRM on masked data
     if runNum == 0:
@@ -163,16 +164,16 @@ for i in range(int(np.max(parcels))):
     SL_match = HMM(data,human_bounds)
     
     # compute regular z-score
-    #match_z = (SL_match[0] - np.mean(SL_match[1:])) / (np.std(SL_match[1:]))
+    match_z = (SL_match[0] - np.mean(SL_match[1:])) / (np.std(SL_match[1:]))
  
     # compute z-score for euclid by flipping sign after z-scoring
-    match_z = ((SL_match[0] - np.mean(SL_match[1:])) / (np.std(SL_match[1:]))) * -1
+    #match_z = ((SL_match[0] - np.mean(SL_match[1:])) / (np.std(SL_match[1:]))) * -1
     
     # convert z-score to p-value
-    #match_p =  st.norm.sf(match_z)
+    match_p =  st.norm.sf(match_z)
  
     # compute p-value
-    match_p = (np.sum(SL_match[1:] <= SL_match[0]) + 1) / (len(SL_match))
+    #match_p = (np.sum(SL_match[1:] <= SL_match[0]) + 1) / (len(SL_match))
 
     # reverse order of numbers such that lower numbers are actually greater
     #SL_match_reverse = 1 - (SL_match - np.min(SL_match))/(np.max(SL_match) - np.min(SL_match))
