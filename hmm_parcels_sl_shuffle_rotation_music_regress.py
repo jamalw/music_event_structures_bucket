@@ -140,7 +140,8 @@ for i in range(int(np.max(parcels))):
     mfcc2   = np.load(feature_dir + 'mfccRun2_hrf.npy')[0:12,:]
     tempo1  = np.load(feature_dir + 'tempoRun1_hrf.npy')[1:,:]
     tempo2  = np.load(feature_dir + 'tempoRun2_hrf.npy')[1:,:]
-    fullRegs = np.vstack((chroma1,mfcc1,tempo1))
+    fullRegs1 = np.vstack((chroma1,mfcc1,tempo1))
+    fullRegs2 = np.vstack((chroma2,mfcc2,tempo2))
 
     run1_regress = []
     run2_regress = []
@@ -148,12 +149,12 @@ for i in range(int(np.max(parcels))):
     for s in range(run1.shape[0]):
         # remove music features from run1
         regr1 = linear_model.LinearRegression()
-        regr1.fit(fullRegs.T,run1[s,:,:].T)
-        run1_regress.append(run1[s,:,:] - np.dot(regr1.coef_, fullRegs) - regr1.intercept_[:, np.newaxis])
+        regr1.fit(fullRegs1.T,run1[s,:,:].T)
+        run1_regress.append(run1[s,:,:] - np.dot(regr1.coef_, fullRegs1) - regr1.intercept_[:, np.newaxis])
         # remove music features from run 2
         regr2 = linear_model.LinearRegression()
-        regr2.fit(fullRegs.T,run2[s,:,:].T)
-        run2_regress.append(run2[s,:,:] - np.dot(regr2.coef_, fullRegs) - regr2.intercept_[:, np.newaxis])
+        regr2.fit(fullRegs2.T,run2[s,:,:].T)
+        run2_regress.append(run2[s,:,:] - np.dot(regr2.coef_, fullRegs2) - regr2.intercept_[:, np.newaxis])
 
     # run SRM on masked data
     if runNum == 0:
