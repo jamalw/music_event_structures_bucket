@@ -13,7 +13,7 @@ def save_nifti(data,affine,savedir):
     nib.save(img, savedir)
  
 datadir = '/jukebox/norman/jamalw/MES/'
-savedir = datadir + "/data/fdr_human_bounds_left_prec_bin.nii.gz"
+savedir = datadir + "/data/fdr_005_human_bounds_left_AG_bin.nii.gz"
 
 full_mask_img = nib.load(datadir + 'data/mask_nonan.nii')
 
@@ -27,7 +27,7 @@ roi = np.zeros_like(full_mask_img.get_data(),dtype=int)
 # get indices where mask and parcels overlap
 #indices = np.where((full_mask_img.get_data() > 0) & (parcels == 39) & (parcels == 35) & (parcels == 16) & (parcels == 36) & (parcels == 24) & (parcels == 37) & (parcels == 48) & (stats_mask.get_data() > 0))
 
-indices = np.where((full_mask_img.get_data() > 0) & (parcels == 39) & (stats_mask.get_data() > 0))
+indices = np.where((full_mask_img.get_data() > 0) & (parcels == 43) & (stats_mask.get_data() > 0))
  
 # fit match score and pvalue into brain
 roi[indices] = 1
