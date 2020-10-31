@@ -10,11 +10,8 @@ import numpy as np
 from brainiak.funcalign.srm import SRM
 import sys
 
-# Custom mean estimator with Fisher z transformation for correlations
-def fisher_mean(correlation, axis=None):
-    return np.tanh(np.mean(np.arctanh(correlation), axis=axis))
 
-datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_input/parcels/Schaefer300/'
+datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/chris_dartmouth/data/'
 ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/'
 
 bootNum = int(sys.argv[1])
@@ -38,12 +35,9 @@ songs_run2 = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_t
 
 durs_run2 = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135])
 
-# Load in data and reshape for Schaefer parcellations where the dimensionality is nSubjs X nVox X Time whereas the dimensions for the data used in the original version of the analysis was nVox X Time X nSubjs 
-run1 = np.load(datadir + 'parcel115_run1.npy')
-run2 = np.load(datadir + 'parcel115_run2.npy')
-
-run1 = np.reshape(run1,(run1.shape[1],run1.shape[2],run1.shape[0]))
-run2 = np.reshape(run2,(run2.shape[1],run2.shape[2],run2.shape[0]))
+# Load in data
+run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run1_n25.npy'),axis=1,ddof=1))
+run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run2_n25.npy'),axis=1,ddof=1))
 
 nSubj = run1.shape[2]
 
@@ -121,10 +115,10 @@ for b in range(nboot):
                       
                     # Compute within vs across boundary correlations
                     same_event = events[:,np.newaxis] == events
-                    within = fisher_mean(cc[same_event*local_mask])
-                    across = fisher_mean(cc[(~same_event)*local_mask])
+                    within = cc[same_event*local_mask].mean()
+                    across = cc[(~same_event)*local_mask].mean()
                     within_across = within - across
                     wVa_results[i,j,b] = within_across
 
 
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/Schaefer300/lprec_wva' + str(bootNum), wVa_results)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/AG_wva' + str(bootNum), wVa_results)
