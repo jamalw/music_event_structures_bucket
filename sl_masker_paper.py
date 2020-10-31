@@ -2,9 +2,9 @@ import numpy as np
 import nibabel as nib
 
 parcelNum = 100
-thr = '001'
-idx = 61
-roi_name = 'rA1'
+thr = '01'
+roi_name = 'left_AG'
+idx = 43
 
 def save_nifti(data,affine,savedir):
     minval = np.min(data)
