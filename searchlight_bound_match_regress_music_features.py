@@ -8,25 +8,31 @@ import nibabel as nib
 import os
 from scipy.spatial import distance
 from sklearn import linear_model
+from srm import SRM_V1, SRM_V2, SRM_V3
+
+song_idx = int(sys.argv[1])
+runNum = int(sys.argv[2])
 
 subjs = ['MES_022817_0','MES_030217_0','MES_032117_1','MES_040217_0','MES_041117_0','MES_041217_0','MES_041317_0','MES_041417_0','MES_041517_0','MES_042017_0','MES_042317_0','MES_042717_0','MES_050317_0','MES_051317_0','MES_051917_0','MES_052017_0','MES_052017_1','MES_052317_0','MES_052517_0','MES_052617_0','MES_052817_0','MES_052817_1','MES_053117_0','MES_060117_0','MES_060117_1']
 
-# run 1 times
-song_bounds = np.array([0,225,314,494,628,718,898,1032,1122,1301,1436,1660,1749,1973, 2198,2377,2511]) 
+if runNum == 0:
+    # run 1 times
+    song_bounds = np.array([0,225,314,494,628,718,898,1032,1122,1301,1436,1660,1749,1973, 2198,2377,2511])
 
-songs = ['Finlandia', 'Blue_Monk', 'I_Love_Music','Waltz_of_Flowers','Capriccio_Espagnole','Island','All_Blues','St_Pauls_Suite','Moonlight_Sonata','Symphony_Fantastique','Allegro_Moderato','Change_of_the_Guard','Boogie_Stop_Shuffle','My_Favorite_Things','The_Bird','Early_Summer']
+    songs = ['Finlandia', 'Blue_Monk', 'I_Love_Music','Waltz_of_Flowers','Capriccio_Espagnole','Island','All_Blues','St_Pauls_Suite','Moonlight_Sonata','Symphony_Fantastique','Allegro_Moderato','Change_of_the_Guard','Boogie_Stop_Shuffle','My_Favorite_Things','The_Bird','Early_Summer']
 
-# run 2 times
-#song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
+elif runNum == 1:
+    # run 2 times
+    song_bounds = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,2063,2288,2377,2511])
 
-#songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
+    songs = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
-song_idx = int(sys.argv[1])
+
 srm_k = 30
 hrf = 5
 
 datadir = '/jukebox/norman/jamalw/MES/'
-mask_img = load_img(datadir + 'data/mask_nonan.nii.gz')
+mask_img = load_img(datadir + 'data/mask_nonan.nii')
 mask = mask_img.get_data()
 mask_reshape = np.reshape(mask,(91*109*91))
 
@@ -62,8 +68,10 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
     datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_input/'
     chroma1 = np.load(datadir + 'chromaRun1_hrf.npy')
     chroma2 = np.load(datadir + 'chromaRun2_hrf.npy')
-    mfcc1   = np.load(datadir + 'mfccRun1_hrf.npy')
-    mfcc2   = np.load(datadir + 'mfccRun2_hrf.npy')
+    mfcc1   = np.load(datadir + 'mfccRun1_hrf.npy')[0:12,:]
+    mfcc2   = np.load(datadir + 'mfccRun2_hrf.npy')[0:12,:]
+    tempo1  = np.load(datadir + 'tempoRun1_hrf.npy')[1:,:]
+    tempo2  = np.load(datadir + 'tempoRun2_hrf.npy')[1:,:]
     for x in range(0,np.max(coords, axis=0)[0]+stride,stride):
         for y in range(0,np.max(coords, axis=0)[1]+stride,stride):
            for z in range(0,np.max(coords, axis=0)[2]+stride,stride):
@@ -75,20 +83,20 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
                for i in range(len(subjs)):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    subj_regs = np.genfromtxt(datadir + subjs[i] + '/EPI_mcf1.par')
-                   motion = subj_regs[0:2511,:].T
-                   fullRegs = np.vstack((motion,chroma1,mfcc1))
+                   motion = subj_regs.T
+                   fullRegs1 = np.vstack((motion[:,0:2511],chroma1,mfcc1,tempo1))
                    regr = linear_model.LinearRegression()
-                   regr.fit(fullRegs.T,subj_data[:,:,0].T)
-                   subj_data1 = subj_data[:,:,0] - np.dot(regr.coef_, fullRegs) - regr.intercept_[:, np.newaxis] 
+                   regr.fit(fullRegs1.T,subj_data[:,:,0].T)
+                   subj_data1 = subj_data[:,:,0] - np.dot(regr.coef_, fullRegs1) - regr.intercept_[:, np.newaxis] 
                    data.append(np.nan_to_num(stats.zscore(subj_data1,axis=1,ddof=1)))
                for i in range(len(subjs)):
                    subj_data = np.load(datadir + subjs[i] + '/' + str(x) + '_' + str(y) + '_' + str(z) + '.npy')
                    subj_regs = np.genfromtxt(datadir + subjs[i] + '/EPI_mcf2.par')
-                   motion = subj_regs[0:2511,:].T
-                   fullRegs = np.vstack((motion,chroma2,mfcc2))
+                   motion = subj_regs.T
+                   fullRegs2 = np.vstack((motion[:,0:2511],chroma2,mfcc2,tempo2))
                    regr = linear_model.LinearRegression()
-                   regr.fit(fullRegs.T,subj_data[:,:,1].T)
-                   subj_data2 = subj_data[:,:,1] - np.dot(regr.coef_, fullRegs) - regr.intercept_[:, np.newaxis]
+                   regr.fit(fullRegs2.T,subj_data[:,:,1].T)
+                   subj_data2 = subj_data[:,:,1] - np.dot(regr.coef_, fullRegs2) - regr.intercept_[:, np.newaxis]
                    data.append(np.nan_to_num(stats.zscore(subj_data2,axis=1,ddof=1))) 
                print("Running Searchlight")
                # only run function on searchlights with voxels greater than or equal to min_vox
@@ -129,21 +137,23 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     
     w = 3
     nPerm = 1000
+    n_iter = 10
     run1 = [X[i] for i in np.arange(0, int(len(X)/2))]
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
-    print('Building Model')
-    srm = SRM(n_iter=10, features=srm_k)   
-    print('Training Model')
-    srm.fit(run2)
-    print('Testing Model')
-    shared_data = srm.transform(run1)
+
+    # run SRM on sl data
+    if runNum == 0:
+        shared_data = SRM_V1(run2,run1,srm_k,n_iter)
+    elif runNum == 1:
+        shared_data = SRM_V1(run1,run2,srm_k,n_iter)
+
     shared_data = stats.zscore(np.dstack(shared_data),axis=1,ddof=1)
     data = np.mean(shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1]],axis=2)
     nTR = data.shape[1]
 
     # Fit to all but one subject
     K = len(human_bounds) + 1
-    ev = brainiak.eventseg.event.EventSegment(K)
+    ev = brainiak.eventseg.event.EventSegment(K,split_merge=True,split_merge_proposals=3)
     ev.fit(data.T)
     bounds = np.where(np.diff(np.argmax(ev.segments_[0],axis=1)))[0] 
     match = np.zeros(nPerm+1)
@@ -181,8 +191,14 @@ for j in range(voxmean.shape[1]):
  
 print('Saving data to Searchlight Folder')
 print(songs[song_idx])
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_regress_music_features/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_fit_run2', results3d_real)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_regress_music_features/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_fit_run2', results3d)
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_regress_music_features/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_fit_run2', results3d_perms)
+if runNum == 0:
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_test_run1_split_merge_regress_all_features', results3d_real)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_test_run1_split_merge_regress_all_features', results3d)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_test_run1_split_merge_regress_all_features', results3d_perms)
+if runNum == 1:
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_test_run2_split_merge_regress_all_features', results3d_real)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_test_run2_split_merge_regress_all_features', results3d)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_test_run2_split_merge_regress_all_features', results3d_perms)
+
 
 
