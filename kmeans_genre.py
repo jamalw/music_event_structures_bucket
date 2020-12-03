@@ -14,7 +14,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, adjusted_rand_score
 from sklearn.pipeline import Pipeline
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+from sklearn.preprocessing import minmax_scale, LabelEncoder, MinMaxScaler
 import seaborn as sns
 
 
@@ -38,6 +38,20 @@ song_bounds2 = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,
 # Load in data
 run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'fdr_01_rA1_split_merge_run1_n25.npy'),axis=1,ddof=1))
 run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'fdr_01_rA1_split_merge_run2_n25.npy'),axis=1,ddof=1))
+
+
+##minmax scaling##
+
+#run1 = np.load(datadir + 'fdr_01_rA1_split_merge_run1_n25.npy')
+#run2 = np.load(datadir + 'fdr_01_rA1_split_merge_run2_n25.npy')
+
+#run1_scaled = np.zeros_like(run1)
+#run2_scaled = np.zeros_like(run2)
+
+#for s in range(run1.shape[2]):
+#    run1_scaled[:,:,s] = minmax_scale(run1[:,:,s],axis=1)
+#    run2_scaled[:,:,s] = minmax_scale(run2[:,:,s],axis=1)
+###################
 
 num_vox = run1.shape[0]
 num_subjs = run1.shape[2]
@@ -67,7 +81,7 @@ clusterer = Pipeline(
                init="k-means++",
                n_init=50,
                max_iter=500,
-               random_state=42,
+               random_state=None,
            ),
        ),
    ]
@@ -81,7 +95,7 @@ pipe = Pipeline(
 
 n_iter = 10
 #features = np.arange(5,200,5)
-features = 5
+features = 2
 silhouette_scores = []
 ari_scores = []
 
