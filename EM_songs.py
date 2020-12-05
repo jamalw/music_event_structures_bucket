@@ -51,19 +51,6 @@ run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'fdr_01_rA1_split_merge_run1
 run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'fdr_01_rA1_split_merge_run2_n25.npy'),axis=1,ddof=1))
 
 
-##minmax scaling##
-
-#run1 = np.load(datadir + 'fdr_01_rA1_split_merge_run1_n25.npy')
-#run2 = np.load(datadir + 'fdr_01_rA1_split_merge_run2_n25.npy')
-
-#run1_scaled = np.zeros_like(run1)
-#run2_scaled = np.zeros_like(run2)
-
-#for s in range(run1.shape[2]):
-#    run1_scaled[:,:,s] = minmax_scale(run1[:,:,s],axis=1)
-#    run2_scaled[:,:,s] = minmax_scale(run2[:,:,s],axis=1)
-###################
-
 num_vox = run1.shape[0]
 num_subjs = run1.shape[2]
 
@@ -74,38 +61,96 @@ for i in range(0,run1.shape[2]):
     run1_list.append(run1[:,:,i])
     run2_list.append(run2[:,:,i])
 
-# create true labels 
-#genre_labels = np.tile(np.array(['Classical','Jazz','Jazz','Classical','Classical','Classical','Jazz', 'Classical','Classical','Classical','Classical', 'Jazz','Jazz','Jazz','Jazz','Jazz']),25)
-selected_songs = [0,13]
+
+selected_songs = [14,8]
+
  
-classical_rep = np.tile(['classical'],durs1[selected_songs[0]])
-jazz_rep = np.tile(['jazz'],durs1[selected_songs[1]])
-song_labels = np.hstack((classical_rep,jazz_rep)) 
+# create sample labels
+#classical_rep = np.tile(['classical'],durs1[selected_songs[0]])
+#jazz_rep = np.tile(['jazz'],durs1[selected_songs[1]])
+#song_labels = np.hstack((classical_rep,jazz_rep)) 
+#label_encoder = LabelEncoder()
+#true_labels = label_encoder.fit_transform(song_labels)
 
-label_encoder = LabelEncoder()
-true_labels = label_encoder.fit_transform(song_labels)
+n_iter = 10
+features = sys.argv[0]
 
+# run SRM on ROIs looping over number of features
+shared_data_test1 = SRM_V1(run2_list,run1_list,features,n_iter)
+shared_data_test2 = SRM_V1(run1_list,run2_list,features,n_iter)
+
+avg_song_across_subjs = []
+
+for s in selected_songs:
+    data = []
+    # first get start and end time for each song in run 1 
+    start_run1 = song_bounds1[s]
+    end_run1   = song_bounds1[s+1]
+    # get start and end time for same song in run 2
+    start_run2 = song_bounds2[songs2.index(songs1[s])]
+    end_run2 = song_bounds2[songs2.index(songs1[s]) + 1]
+
+    # loop over each subject and crop out song data, average across runs and then time, and store in primary data matrix
+    for p in range(len(shared_data_test1)):
+        song_data1 = shared_data_test1[p][:,start_run1:end_run1]
+        song_data2 = shared_data_test2[p][:,start_run2:end_run2]
+        song_data_both_runs = (song_data1+song_data2)/2
+        #data.append(np.mean(song_data_both_runs,axis=1)) 
+        data.append(song_data_both_runs)
+    avg_song_across_subjs.append(np.mean(np.asarray(data),axis=0))
+data_array = np.hstack((avg_song_across_subjs[0],avg_song_across_subjs[1]))
+song1_dur = np.zeros(avg_song_across_subjs[0].shape[1])
+song2_dur = np.ones(avg_song_across_subjs[1].shape[1])
+song_labels = np.hstack((song1_dur,song2_dur))
+
+np.random.seed(sys.argv[1])
+
+randInds=np.random.permutation(smps.shape[0])
+randLabels = song_labels[randInds]
+randData = data_array[:,randInds]
+
+# take top 90% for training
+testNum = int(smps.shape[0] * .1)
+
+trainData = randData[testNum:]
+trainLabs = randLabels[testNum:]
+testData = randData[:testNum]
+testLabels = randLabels[:testNum]
+
+
+
+#mu1 = np.array([np.mean(avg_song_across_subjs[0][0,:]),np.mean(avg_song_across_subjs[0][1,:])])
+#mu2 = np.array([np.mean(avg_song_across_subjs[1][0,:]),np.mean(avg_song_across_subjs[1][1,:])])
+#cov1 = np.diag(np.array([np.cov(avg_song_across_subjs[0][0,:]),np.cov(avg_song_across_subjs[0][1,:])]))
+#cov2 = np.diag(np.array([np.cov(avg_song_across_subjs[1][0,:]),np.cov(avg_song_across_subjs[1][1,:])]))
 ### Generate data
 
 # Set means and covariances
-mu1 = np.array([-1,0])
-mu2 = np.array([ 2,2])
-cov1 = np.array([[1,0],[0,10]])
-cov2 = np.array([[1,0.98],[0.98,1]])*15
-axes = 15*np.array([-1,1,-1,1])
+#mu1 = np.array([-1,0])
+#mu2 = np.array([ 2,2])
+#cov1 = np.array([[1,0],[0,10]])
+#cov2 = np.array([[1,0.98],[0.98,1]])*15
+axes = np.max([cov1,cov2])/2*np.array([-1,1,-1,1])
 
 # Sample from two Gaussians
-nsamps1 = 200 # number of samples from first Gaussian
-nsamps2 = 300 # number of samples from second Gaussian
-smps1 = np.random.multivariate_normal(mu1, cov1, nsamps1)
-smps2 = np.random.multivariate_normal(mu2, cov2, nsamps2)
+#nsamps1 = 200 # number of samples from first Gaussian
+#nsamps2 = 300 # number of samples from second Gaussian
+#smps1 = np.random.multivariate_normal(mu1, cov1, nsamps1)
+#smps2 = np.random.multivariate_normal(mu2, cov2, nsamps2)
+
+smps1 = avg_song_across_subjs[0].T
+smps2 = avg_song_across_subjs[1].T
+nsamps1 = smps1.shape[0]
+nsamps2 = smps2.shape[0]
+smps = data_array.T
 
 # Now plot the samples
 fig, [ax0,ax1] = plt.subplots(1,2, figsize=(12,6))
-ax0.plot(smps1[:,0],smps1[:,1], 'bo')
-ax0.plot(smps2[:,0],smps2[:,1], 'ro')
+ax0.plot(smps1[:,0],smps1[:,1], 'bo',label=songs1[selected_songs[0]])
+ax0.plot(smps2[:,0],smps2[:,1], 'ro',label=songs1[selected_songs[1]])
 ax0.axis(axes); ax0.set_aspect('equal')
 ax0.set_title('raw data (with labels)', fontsize=18);
+ax0.legend()
 
 ### Initialize EM
 EMiteration = 1
@@ -127,15 +172,15 @@ ax1.clear()
 ax1.plot(smps[:,0],smps[:,1], 'ko')
 plot_ellipse(m1, v1, 3, ax1, color='blue', lw=3); plot_ellipse(m1, v1, 3, ax1, color='white', lw=1)
 plot_ellipse(m2, v2, 3, ax1, color='red', lw=3); plot_ellipse(m2, v2, 3, ax1, color='white', lw=1)
-ax1.plot(m1[0],m1[1],'bd',markersize=15, markerfacecolor='None', markeredgewidth=3)
-ax1.plot(m2[0],m2[1],'rd',markersize=15, markerfacecolor='None', markeredgewidth=3)
+ax1.plot(m1[0],m1[1],'bd',markersize=15, markerfacecolor='blue', markeredgewidth=3,markeredgecolor='k')
+ax1.plot(m2[0],m2[1],'rd',markersize=15, markerfacecolor='red', markeredgewidth=3,markeredgecolor='k')
 ax1.axis(axes); ax1.set_aspect('equal')
 ax1.set_title('EM initialization', fontsize=18);
 
 ### Set animation parameters for algorithm visualization
 pause_duration = 0.5      # how long (in sec) to pause after each step
 manual_progress = False    # set to True to press Enter to progress through each step
-total_iterations = 10     # total number of EM steps for the algorithm to run
+total_iterations = 10    # total number of EM steps for the algorithm to run
 
 if manual_progress: pause_duration=0.01
 while EMiteration <= total_iterations:
@@ -156,8 +201,8 @@ while EMiteration <= total_iterations:
     ax1.plot(smps[p1<=p2,0],smps[p1<=p2,1], 'ro')
     plot_ellipse(m1, v1, 3, ax1, color='blue', lw=3); plot_ellipse(m1, v1, 3, ax1, color='white', lw=1)
     plot_ellipse(m2, v2, 3, ax1, color='red', lw=3); plot_ellipse(m2, v2, 3, ax1, color='white', lw=1)
-    ax1.plot(m1[0],m1[1],'bd',markersize=15, markerfacecolor='None', markeredgewidth=3)
-    ax1.plot(m2[0],m2[1],'rd',markersize=15, markerfacecolor='None', markeredgewidth=3)
+    ax1.plot(m1[0],m1[1],'bd',markersize=15, markerfacecolor='blue', markeredgewidth=1,markeredgecolor='k')
+    ax1.plot(m2[0],m2[1],'rd',markersize=15, markerfacecolor='red', markeredgewidth=1,markeredgecolor='k')
     ax1.axis(axes); ax1.set_aspect('equal')
     ax1.set_title('EM initialization, E-step ' + str(EMiteration), fontsize=18)
     
@@ -180,8 +225,8 @@ while EMiteration <= total_iterations:
     ax1.plot(smps[p1<=p2,0],smps[p1<=p2,1], 'ro')
     plot_ellipse(m1, v1, 3, ax1, color='blue', lw=3); plot_ellipse(m1, v1, 3, ax1, color='white', lw=1)
     plot_ellipse(m2, v2, 3, ax1, color='red', lw=3); plot_ellipse(m2, v2, 3, ax1, color='white', lw=1)
-    ax1.plot(m1[0],m1[1],'bd',markersize=15, markerfacecolor='None', markeredgewidth=3)
-    ax1.plot(m2[0],m2[1],'rd',markersize=15, markerfacecolor='None', markeredgewidth=3)
+    ax1.plot(m1[0],m1[1],'bd',markersize=15, markerfacecolor='blue', markeredgewidth=1,markeredgecolor='k')
+    ax1.plot(m2[0],m2[1],'rd',markersize=15, markerfacecolor='red', markeredgewidth=1,markeredgecolor='k')
     ax1.axis(axes); ax1.set_aspect('equal')
     ax1.set_title('EM initialization, M-step ' + str(EMiteration), fontsize=18)
 
