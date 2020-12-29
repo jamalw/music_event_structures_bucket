@@ -88,3 +88,7 @@ for i in range(1000):
 pvals_A1_AG = 1-np.sum(A1_peaks_less_than_AG_peaks)/len(A1_peaks_less_than_AG_peaks)
 pvals_A1_prec = 1-np.sum(A1_peaks_less_than_prec_peaks)/len(A1_peaks_less_than_prec_peaks)
 
+# compute rois preferred event length in seconds
+a1_pref = unique_event_lengths[np.argmax(a1_mean)] 
+AG_pref = unique_event_lengths[np.argmax(AG_mean)]
+prec_pref = unique_event_lengths[np.argmax(prec_mean)] 
