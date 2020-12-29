@@ -3,10 +3,11 @@ import matplotlib.pyplot as plt
 from scipy.stats import sem
 
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/principled/'
+smooth_data = np.load(datadir + 'smooth_wva_split_merge_01_lprec_full.npy')
 
-a1 = np.load(datadir + 'smooth_wva_split_merge_01.npy')[:,0,:]
-AG = np.load(datadir + 'smooth_wva_split_merge_01.npy')[:,1,:]
-prec = np.load(datadir + 'smooth_wva_split_merge_01.npy')[:,2,:]
+a1 = smooth_data[:,0,:]
+AG = smooth_data[:,1,:]
+prec = smooth_data[:,2,:]
 
 a1_mean = a1.mean(axis=1)
 AG_mean = AG.mean(axis=1)
@@ -70,7 +71,7 @@ plt.ylabel('WvA Score', fontsize=18)
 plt.title('ROIs Preferred Event Length', fontsize=18)
 plt.tight_layout()
 
-plt.savefig('hmm_K_sweep_paper_results/principled/preferred_event_length_split_merge_01_lprec_full.png')
+#plt.savefig('hmm_K_sweep_paper_results/Schaefer300/regress_features/preferred_event_length_regress_mfcc.png')
 
 # compute pvals
 A1_peaks_less_than_AG_peaks = np.zeros((1000))
