@@ -36,8 +36,8 @@ songs_run2 = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_t
 durs_run2 = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135])
 
 # Load in data
-run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run1_n25.npy'),axis=1,ddof=1))
-run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'zstats_human_bounds_left_AG_run2_n25.npy'),axis=1,ddof=1))
+run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'fdr_01_lprec_full_split_merge_run1_n25.npy'),axis=1,ddof=1))
+run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'fdr_01_lprec_full_split_merge_run2_n25.npy'),axis=1,ddof=1))
 
 nSubj = run1.shape[2]
 
@@ -113,12 +113,12 @@ for b in range(nboot):
                 for k in range(1,max_event_length):
                     local_mask[np.diag(np.ones(cc.shape[0]-k, dtype=bool), k)] = True
                       
-                    # Compute within vs across boundary correlations
-                    same_event = events[:,np.newaxis] == events
-                    within = cc[same_event*local_mask].mean()
-                    across = cc[(~same_event)*local_mask].mean()
-                    within_across = within - across
-                    wVa_results[i,j,b] = within_across
+                # Compute within vs across boundary correlations
+                same_event = events[:,np.newaxis] == events
+                within = cc[same_event*local_mask].mean()
+                across = cc[(~same_event)*local_mask].mean()
+                within_across = within - across
+                wVa_results[i,j,b] = within_across
 
 
-np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/AG_wva' + str(bootNum), wVa_results)
+np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/principled/lprec_full_wva_split_merge_01_' + str(bootNum), wVa_results)
