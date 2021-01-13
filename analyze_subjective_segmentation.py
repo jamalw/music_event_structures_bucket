@@ -62,6 +62,18 @@ for i in range(len(durs)):
     indexes = peakutils.indexes(combined,thres=0.5, min_dist=5)
     all_songs_indexes.append([indexes])
 
+# compute subject specific bound average across songs
+subj_bounds = np.zeros((len(subjs),len(durs)))
+
+for s in range(len(subjs)):
+    for i in range(len(durs)):
+        subj_bounds[s,i] = len(bounds[i][s][0])
+
+subj_bounds_mean = np.mean(subj_bounds,axis=1)
+mean_of_mean_bounds = np.mean(subj_bounds_mean)
+std_of_mean_bounds = np.std(subj_bounds_mean)
+
+# plot peaks for each song
 for i in range(len(all_songs_indexes)):
     peak_vector = np.zeros((durs[i]))
     peak_vector[all_songs_indexes[i][0]] = 1
