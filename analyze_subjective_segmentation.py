@@ -72,12 +72,25 @@ for i in range(len(all_songs_indexes)):
     plt.ylabel('boundary(0 or 1)',fontsize=18)
     plt.tight_layout()
 
+# compute average (and std) number of event boundaries across all songs
+num_bounds_total = 0
+num_bounds_per_song = np.zeros((len(all_songs_indexes)))
+num_songs = len(songs)
+
+for i in range(num_songs):
+    num_bounds_total += len(all_songs_indexes[i][0])
+    num_bounds_per_song[i] = len(all_songs_indexes[i][0])
+
+avg_num_bounds = num_bounds_total/len(all_songs_indexes)
+
+std_num_bounds = (np.sqrt(np.sum((num_bounds_per_song - avg_num_bounds)**2)))/num_songs 
+
 #out = csv.writer(open("beh_peaks.csv","w"), delimiter=',',quoting=csv.QUOTE_ALL)
 #out.writerow(all_songs_indexes)
 
 songs_fn = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_the_Guard','Waltz_of_Flowers','The_Bird', 'Island', 'Allegro_Moderato', 'Finlandia', 'Early_Summer', 'Capriccio_Espagnole', 'Symphony_Fantastique', 'Boogie_Stop_Shuffle', 'My_Favorite_Things', 'Blue_Monk','All_Blues']
 
-for i in range(len(songs_fn)):
-    np.save(datadir + 'searchlight_output/HMM_searchlight_K_sweep_srm/' + songs_fn[i] + '/' + songs_fn[i] + '_beh_seg',all_songs_indexes[i][0])    
+#for i in range(len(songs_fn)):
+#    np.save(datadir + 'searchlight_output/HMM_searchlight_K_sweep_srm/' + songs_fn[i] + '/' + songs_fn[i] + '_beh_seg',all_songs_indexes[i][0])    
 
 
