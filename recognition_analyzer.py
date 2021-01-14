@@ -36,15 +36,22 @@ N = 4
 ind = np.arange(N)
 width = 0.35
 
-barlist = plt.bar(ind, all_p_correct, width, color='k')
-barlist[1].set_color('r')
-barlist[3].set_color('r')
-plt.ylabel('Recognition Scores', fontsize=15)
-plt.title('Recognition Test Scores',fontweight='bold',fontsize=18)
-labels = ['Presented', 'Lure', 'Presented','Lure']
-plt.xticks(ind + width / 4.5, labels, fontsize = 15)
-axes = plt.gca()
-axes.set_ylim([0,5])
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+rects1 = ax.bar(ind, all_p_correct, width, color='k', align = 'center')
+#labels = ['Presented', 'Lure', 'Presented','Lure']
+#plt.xticks(ind + width / 4.5, labels, fontsize = 15)
+ax.get_children()
+ax.get_children()[1].set_color('r')
+ax.get_children()[3].set_color('r')
+ax.set_xticklabels(('','Presented','\n\nDay1','Lure','','Presented','\n\nDay2','Lure'),ha='center', fontsize=15)
+ax.set_title('Recognition Test Scores', fontweight='bold',fontsize=18)
+ax.set_ylabel('Recognition Scores',fontsize=15)
+ax.set_ylim([0,5])
+ax.tick_params(axis='y', labelsize=12)
+ax.tick_params(axis='x', bottom=False)
+plt.tight_layout()
 
 # compute t-test for difference between day1 discrimination and day 2 discrimination
 d1 = np.mean(data1[0:16,:],axis=0)
@@ -57,6 +64,6 @@ diff2 = d2 - l2
 
 stats.ttest_rel(diff1,diff2)
 
-#plt.savefig('recog_fig.svg')
+plt.savefig('plots/recog_fig.svg')
 
 
