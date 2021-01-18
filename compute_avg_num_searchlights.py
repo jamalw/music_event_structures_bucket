@@ -56,4 +56,4 @@ for x in range(0,np.max(coords, axis=0)[0]+stride,stride):
                #print(str(counter)) 
 
 mean_num_voxels_per_sl = np.mean(numVox_per_SL)
-std_num_voxles_per_sl = np.std(numVox_per_SL)
+std_num_voxels_per_sl = np.std(numVox_per_SL)
