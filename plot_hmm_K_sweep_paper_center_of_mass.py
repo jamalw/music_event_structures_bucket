@@ -52,26 +52,25 @@ for i in range(len(unique_event_lengths)):
 
 plt.figure(figsize=(10,5))
 
-plt.plot(unique_event_lengths, a1_mean, color='k', label='rA1')
-plt.fill_between(unique_event_lengths, a1_min, a1_max,color='k',alpha=0.3)
+plt.plot(unique_event_lengths, a1_mean, color='indigo', label='right auditory cortex',linewidth=3)
+plt.fill_between(unique_event_lengths, a1_min, a1_max,color='indigo',alpha=0.3)
 
-plt.plot(unique_event_lengths, AG_mean, color='magenta', label='lAG')
+plt.plot(unique_event_lengths, AG_mean, color='magenta', label='left angular gyrus',linewidth=3)
 plt.fill_between(unique_event_lengths, AG_min, AG_max,color='magenta',alpha=0.3)
 
-plt.plot(unique_event_lengths, prec_mean, color='green', label='lprec')
+plt.plot(unique_event_lengths, prec_mean, color='green', label='left precuneus',linewidth=3)
 plt.fill_between(unique_event_lengths, prec_min, prec_max,color='green',alpha=0.3)
 
-plt.legend()
+#plt.legend(fontsize=15)
 
 event_lengths_str = ['2','','','3','','','','4','','5','','','','6','','','','','9','10','','12','15','18','20','25','27','30','36','45','60','75']
 
-plt.xticks(unique_event_lengths,event_lengths_str,rotation=45)
-plt.xlabel('Event Length (s)', fontsize=18)
-plt.ylabel('WvA Score', fontsize=18)
-plt.title('ROIs Preferred Event Length', fontsize=18)
+plt.xticks(unique_event_lengths,event_lengths_str,rotation=45,fontsize=13)
+plt.yticks(fontsize=13)
+plt.xlabel('Event Length (s)', fontsize=18,fontweight='bold')
+plt.ylabel('Model Fit', fontsize=18,fontweight='bold')
+plt.title('Preferred Event Length', fontsize=18,fontweight='bold')
 plt.tight_layout()
-
-#plt.savefig('hmm_K_sweep_paper_results/Schaefer300/regress_features/preferred_event_length_regress_mfcc.png')
 
 # compute pvals
 A1_peaks_less_than_AG_peaks = np.zeros((1000))
@@ -92,3 +91,12 @@ pvals_A1_prec = 1-np.sum(A1_peaks_less_than_prec_peaks)/len(A1_peaks_less_than_p
 a1_pref = unique_event_lengths[np.argmax(a1_mean)] 
 AG_pref = unique_event_lengths[np.argmax(AG_mean)]
 prec_pref = unique_event_lengths[np.argmax(prec_mean)] 
+
+plt.axvline(a1_pref,color='indigo',linewidth=3)
+plt.axvline(AG_pref,color='magenta',linewidth=3)
+plt.axvline(prec_pref,color='green',linewidth=3,linestyle='dotted')
+
+
+plt.savefig('hmm_K_sweep_paper_results/principled/preferred_event_length_split_merge_01_lprec_full.png')
+
+
