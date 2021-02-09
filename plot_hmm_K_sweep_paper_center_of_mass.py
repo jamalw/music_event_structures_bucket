@@ -77,10 +77,18 @@ A1_peaks_less_than_AG_peaks = np.zeros((1000))
 A1_peaks_less_than_prec_peaks = np.zeros((1000))
 x = np.arange(1,len(unique_event_lengths)+1)
 
+# initialize center of mass storage variables
+A1_com = np.zeros((1000))
+AG_com = np.zeros((1000))
+prec_com = np.zeros((1000))
+
 for i in range(1000):
     A1_peak = np.sum(x*a1[:,i])/np.sum(a1[:,i])
     AG_peak = np.sum(x*AG[:,i])/np.sum(AG[:,i])
     prec_peak = np.sum(x*prec[:,i])/np.sum(prec[:,i])
+    A1_com[i] = A1_peak
+    AG_com[i] = AG_peak
+    prec_com[i] = prec_peak
     A1_peaks_less_than_AG_peaks[i] = A1_peak < AG_peak
     A1_peaks_less_than_prec_peaks[i] = A1_peak < prec_peak
 
@@ -92,10 +100,15 @@ a1_pref = unique_event_lengths[np.argmax(a1_mean)]
 AG_pref = unique_event_lengths[np.argmax(AG_mean)]
 prec_pref = unique_event_lengths[np.argmax(prec_mean)] 
 
-plt.axvline(a1_pref,color='indigo',linewidth=3)
-plt.axvline(AG_pref,color='magenta',linewidth=3)
-plt.axvline(prec_pref,color='green',linewidth=3,linestyle='dotted')
+# compute rois preferred event length as average center of mass across bootstraps
+A1_com_mean = np.mean(A1_com)
+AG_com_mean = np.mean(AG_com)
+prec_com_mean = np.mean(prec_com)
 
+# plot vertical lines corresponding to the preferred event length for each ROI 
+plt.axvline(A1_com_mean,color='indigo',linewidth=3)
+plt.axvline(AG_com_mean,color='magenta',linewidth=3)
+plt.axvline(prec_com_mean,color='green',linewidth=3)
 
 plt.savefig('hmm_K_sweep_paper_results/principled/preferred_event_length_split_merge_01_lprec_full.png')
 
