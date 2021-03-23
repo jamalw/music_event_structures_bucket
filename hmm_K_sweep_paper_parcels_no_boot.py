@@ -40,15 +40,15 @@ songs_run2 = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_t
 
 durs_run2 = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135])
 
-dict_names = ['WvA_Songs_x_Ks','Smooth_WvA','Max_WvA','Pref_Event_Length_Sec']
+dict_names = ['WvA_Songs_x_Ks','Smooth_WvA','Smooth_Max_WvA','Raw_Max_WvA','Pref_Event_Length_Sec']
 
-# Load in data and reshape for Schaefer parcellations where the dimensionality is nSubjs X nVox X Time whereas the dimensions for the data used in the original version of the analysis was nVox X Time X nSubjs 
+# Load in data
 run1 = np.load(datadir + 'parcel' + roiNum + '_run1.npy')
 run2 = np.load(datadir + 'parcel' + roiNum + '_run2.npy')
 
 nSubj = run1.shape[0]
 
-# Convert data into lists where each element is voxels by samples
+# Convert data into lists where each element is a subject's data of size voxels by samples
 run1_list = []
 run2_list = []
 for i in range(0,nSubj):
@@ -82,6 +82,9 @@ avg_response_train_run2 = sum(shared_data_train_run2)/len(shared_data_train_run2
 
 ##################################################################################
 
+# initialize variable that will hold max wva score for each song
+max_wvas = np.zeros(16)
+
 for i in range(16):
     print('song number ',str(i))
     # grab start and end time for each song from bound vectors. for SRM data trained on run 1 and tested on run 2, use song name from run 1 to find index for song onset in run 2 bound vector 
@@ -103,7 +106,7 @@ for i in range(16):
         max_event_length = stats.mode(events)[1][0]
         # compute timepoint by timepoint correlation matrix 
         cc = np.corrcoef(data.T) # Should be a time by time correlation matrix
-                 
+        
         # Create a mask to only look at values up to max_event_length
         local_mask = np.zeros(cc.shape, dtype=bool)
         for k in range(1,max_event_length):
@@ -116,9 +119,13 @@ for i in range(16):
             within_across = within - across
             ROI_WvA[i,j] = within_across
 
+    # store max wva for each song
+    max_wvas[i] = np.max(ROI_WvA[i,:])
 
-sigma = '5'
+# compute average max wva across songs
+mean_max_wva = np.mean(max_wvas)
 
+# computing average event lengths using song durations divided by number of events
 durs_run1_new = durs_run1[:,np.newaxis]
 
 event_lengths = durs_run1_new/K_set
@@ -128,18 +135,16 @@ x = event_lengths.ravel()
 
 test_x = np.linspace(min(x), max(x), num=100)
 
-opt_bw = 0
-
 y = ROI_WvA.ravel()
 KR = KernelReg(y,x,var_type='c')
 KR_w_bw = KernelReg(y,x,var_type='c', bw=KR.bw)
-max_wva = np.argmax(KR_w_bw.fit(test_x)[0])  # Find peak on fine grid
 smooth_wva = KR_w_bw.fit(unique_event_lengths)[0]
+max_wva = np.max(smooth_wva)
 
-# compute rois preferred event length in seconds
+# compute roi's preferred event length in seconds
 ROI_pref_sec = unique_event_lengths[np.argmax(smooth_wva)]
 
-inputs = [ROI_WvA,smooth_wva,max_wva,ROI_pref_sec]
+inputs = [ROI_WvA,smooth_wva,max_wva,mean_max_wva,ROI_pref_sec]
 dct = {}
 
 for i,j in zip(dict_names,inputs):
