@@ -43,36 +43,37 @@ end_run1   = song_bounds1[song_number+1]
 start_run2 = song_bounds2[songs2.index(songs1[song_number])]
 end_run2 = song_bounds2[songs2.index(songs1[song_number]) + 1]
 
+roi = 'rA1'
 
 # Load in data
-run1 = stats.zscore(np.load(datadir + 'fdr_01_lprec_split_merge_run1_n25.npy'),axis=1,ddof=1)
-run2 = stats.zscore(np.load(datadir + 'fdr_01_lprec_split_merge_run2_n25.npy'),axis=1,ddof=1)
+run1 = np.load(datadir + 'fdr_01_' + roi + '_split_merge_run1_n25.npy')
+run2 = np.load(datadir + 'fdr_01_' + roi + '_split_merge_run2_n25.npy')
 
 # Convert data into lists where each element is voxels by samples
-#run1_list = []
-#run2_list = []
-#for i in range(0,run1.shape[2]):
-#    run1_list.append(run1[:,:,i])
-#    run2_list.append(run2[:,:,i])
-#
-#n_iter = 10
-#features = 10
-#
-### run SRM on ROIs
-#shared_data_test1 = SRM_V1(run2_list,run1_list,features,n_iter)
-#shared_data_test2 = SRM_V1(run1_list,run2_list,features,n_iter)
-#
-#avg_response_test_run1 = sum(shared_data_test1)/len(shared_data_test1)
-#avg_response_test_run2 = sum(shared_data_test2)/len(shared_data_test2)
-#
-#song1 = avg_response_test_run1[:,start_run1:end_run1]
-#song2 = avg_response_test_run2[:,start_run2:end_run2]
-#
-run1DataAvg = np.mean(run1,axis=2)
-run2DataAvg = np.mean(run2,axis=2)
+run1_list = []
+run2_list = []
+for i in range(0,run1.shape[2]):
+    run1_list.append(run1[:,:,i])
+    run2_list.append(run2[:,:,i])
 
-song1 = run1DataAvg[:,start_run1:end_run1]
-song2 = run2DataAvg[:,start_run2:end_run2]
+n_iter = 10
+features = 10
+
+## run SRM on ROIs
+shared_data_test1 = SRM_V1(run2_list,run1_list,features,n_iter)
+shared_data_test2 = SRM_V1(run1_list,run2_list,features,n_iter)
+
+avg_response_test_run1 = sum(shared_data_test1)/len(shared_data_test1)
+avg_response_test_run2 = sum(shared_data_test2)/len(shared_data_test2)
+
+song1 = avg_response_test_run1[:,start_run1:end_run1]
+song2 = avg_response_test_run2[:,start_run2:end_run2]
+
+#run1DataAvg = np.mean(run1,axis=2)
+#run2DataAvg = np.mean(run2,axis=2)
+
+#song1 = run1DataAvg[:,start_run1:end_run1]
+#song2 = run2DataAvg[:,start_run2:end_run2]
 
 data = (song1 + song2)/2
 plt.figure(figsize=(10,10))
@@ -98,13 +99,11 @@ for i in range(len(human_bounds)-1):
 
 song_names = ['Finlandia', 'Blue Monk', 'I Love Music','Waltz of Flowers','Capriccio Espagnole','Island','All Blues','St Pauls Suite','Moonlight Sonata','Symphony Fantastique','Allegro Moderato','Change of the Guard','Boogie Stop Shuffle','My Favorite Things','The Bird','Early Summer']
 
-roi = 'lprec'
-
 #plt.title('rA1 no srm no zscore ' + song_names[song_number],fontsize=18,fontweight='bold')
 ax.set_xlabel('TRs',fontsize=23,fontweight='bold')
 ax.set_ylabel('TRs',fontsize=23,fontweight='bold')
-ax.set_title(roi + ' no srm w/ zscoring ' + song_names[song_number],fontsize=25,fontweight='bold')
-plt.savefig('plots/paper_versions/debug/' + roi + '/' + song_names[song_number] + '_' + roi + '_no_srm_with_zscoring')
+ax.set_title(roi + ' no z w/SRM ' + song_names[song_number],fontsize=25,fontweight='bold')
+plt.savefig('plots/paper_versions/debug/' + roi + '/' + song_names[song_number] + '_' + roi + '_no_z_with_SRM')
 #plt.savefig('plots/paper_versions/debug/' + roi + '/' + song_names[song_number] + '_srm_k_' + str(features) + '_' + roi + ' no_z_no_srm')
 
 
