@@ -43,11 +43,11 @@ end_run1   = song_bounds1[song_number+1]
 start_run2 = song_bounds2[songs2.index(songs1[song_number])]
 end_run2 = song_bounds2[songs2.index(songs1[song_number]) + 1]
 
-roi = 'rA1'
+roi = 'lprec'
 
 # Load in data
-run1 = np.load(datadir + 'fdr_01_' + roi + '_split_merge_run1_n25.npy')
-run2 = np.load(datadir + 'fdr_01_' + roi + '_split_merge_run2_n25.npy')
+run1 = stats.zscore(np.load(datadir + 'fdr_01_' + roi + '_split_merge_run1_n25.npy'),axis=1, ddof=1)
+run2 = stats.zscore(np.load(datadir + 'fdr_01_' + roi + '_split_merge_run2_n25.npy'), axis=1, ddof=1)
 
 # Convert data into lists where each element is voxels by samples
 run1_list = []
@@ -102,8 +102,8 @@ song_names = ['Finlandia', 'Blue Monk', 'I Love Music','Waltz of Flowers','Capri
 #plt.title('rA1 no srm no zscore ' + song_names[song_number],fontsize=18,fontweight='bold')
 ax.set_xlabel('TRs',fontsize=23,fontweight='bold')
 ax.set_ylabel('TRs',fontsize=23,fontweight='bold')
-ax.set_title(roi + ' no z w/SRM ' + song_names[song_number],fontsize=25,fontweight='bold')
-plt.savefig('plots/paper_versions/debug/' + roi + '/' + song_names[song_number] + '_' + roi + '_no_z_with_SRM')
+ax.set_title(roi + ' w/zscoring w/SRM ' + song_names[song_number],fontsize=25,fontweight='bold')
+plt.savefig('plots/paper_versions/debug/' + roi + '/' + song_names[song_number] + '_' + roi + '_with_zscoring_with_SRM')
 #plt.savefig('plots/paper_versions/debug/' + roi + '/' + song_names[song_number] + '_srm_k_' + str(features) + '_' + roi + ' no_z_no_srm')
 
 
