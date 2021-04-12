@@ -1,0 +1,43 @@
+from statesegmentation import GSBS
+import numpy as np
+import matplotlib.pyplot as plt
+
+song_bounds = np.array([0,225,314,494,628,718,898,1032,1122,1301,1436,1660,1749,1973, 2198,2377,2511])
+
+songs = ['Finlandia', 'Blue_Monk', 'I_Love_Music','Waltz_of_Flowers','Capriccio_Espagnole','Island','All_Blues','St_Pauls_Suite','Moonlight_Sonata','Symphony_Fantastique','Allegro_Moderato','Change_of_the_Guard','Boogie_Stop_Shuffle','My_Favorite_Things','The_Bird','Early_Summer']
+
+def GSBS_helper(feature, K):
+    states = GSBS(x=feature.T, kmax=K+1)
+    states.fit()
+    bounds = np.round(np.nonzero(states.get_bounds())[0])
+    
+    return bounds
+
+# load features
+datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_input/'
+savedir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/GSBS_annotations/'
+
+chroma = np.load(datadir + 'chromaRun1_no_hrf.npy')
+mfcc   = np.load(datadir + 'mfccRun1_no_hrf.npy')[0:12,:]
+tempo  = np.load(datadir + 'tempoRun1_12PC_singles_no_hrf.npy')
+
+for i in range(len(songs)):
+    # extract song-specific timepoints
+    songChroma = chroma[:,song_bounds[i]:song_bounds[i+1]]
+    songMFCC = mfcc[:,song_bounds[i]:song_bounds[i+1]]
+    songTempo = tempo[:,song_bounds[i]:song_bounds[i+1]]
+
+    # compute feature boundaries
+    print('computing chroma bounds for: ', songs[i])
+    chromaBounds = GSBS_helper(songChroma, songChroma.shape[1])
+    np.save(savedir + songs[i] + '/chroma_bounds', chromaBounds) 
+
+    print('computing mfcc bounds for: ', songs[i])
+    mfccBounds   = GSBS_helper(songMFCC, songMFCC.shape[1])
+    np.save(savedir + songs[i] + '/mfcc_bounds', mfccBounds)
+
+    print('computing tempo bounds for: ', songs[i])
+    tempoBounds  = GSBS_helper(songTempo, songTempo.shape[1])   
+    np.save(savedir + songs[i] + '/tempo_bounds', tempoBounds)
+    
+    
