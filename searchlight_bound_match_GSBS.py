@@ -145,7 +145,7 @@ def GSBS_helper(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
 
     # Fit to all but one subject
     K = len(human_bounds) + 1
-    ev = GSBS(x=data.T,kmax=K)
+    ev = GSBS(x=data.T,kmax=nTR)
     bounds = np.round(np.nonzero(ev.get_bounds())[0])    
     match = np.zeros(nPerm+1)
     perm_bounds = bounds.copy()
