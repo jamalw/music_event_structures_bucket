@@ -3,15 +3,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import zscore
 
+set_bounds = 0
+
 song_bounds = np.array([0,225,314,494,628,718,898,1032,1122,1301,1436,1660,1749,1973, 2198,2377,2511])
 
 songs = ['Finlandia', 'Blue_Monk', 'I_Love_Music','Waltz_of_Flowers','Capriccio_Espagnole','Island','All_Blues','St_Pauls_Suite','Moonlight_Sonata','Symphony_Fantastique','Allegro_Moderato','Change_of_the_Guard','Boogie_Stop_Shuffle','My_Favorite_Things','The_Bird','Early_Summer']
 
-def GSBS_helper(feature, K):
+def GSBS_helper(feature, K, set_bounds):
     states = GSBS(x=feature.T, kmax=K+1)
     states.fit()
-    bounds = np.round(np.nonzero(states.get_bounds())[0])
-    
+    if set_bounds == 0:
+        bounds = np.round(np.nonzero(states.get_bounds())[0])
+    elif set_bounds == 1:
+        bounds = np.round(np.nonzero(states.get_bounds(K))[0])
+
     return bounds
 
 # load features
