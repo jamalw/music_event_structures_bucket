@@ -12,6 +12,7 @@ songs = ['Finlandia', 'Blue_Monk', 'I_Love_Music','Waltz_of_Flowers','Capriccio_
 def GSBS_helper(feature, K, set_bounds):
     states = GSBS(x=feature.T, kmax=K+1)
     states.fit()
+
     if set_bounds == 0:
         bounds = np.round(np.nonzero(states.get_bounds())[0])
     elif set_bounds == 1:
@@ -36,16 +37,16 @@ for i in range(len(songs)):
 
     # compute feature boundaries
     print('computing chroma bounds for: ', songs[i])
-    chromaBounds = GSBS_helper(songChroma, songChroma.shape[1])
+    chromaBounds = GSBS_helper(songChroma, songChroma.shape[1], set_bounds)
 
     print('computing mfcc bounds for: ', songs[i])
-    mfccBounds   = GSBS_helper(songMFCC, songMFCC.shape[1])
+    mfccBounds   = GSBS_helper(songMFCC, songMFCC.shape[1], set_bounds)
 
     print('computing tempo bounds for: ', songs[i])
-    tempoBounds  = GSBS_helper(songTempo, songTempo.shape[1])   
+    tempoBounds  = GSBS_helper(songTempo, songTempo.shape[1], set_bounds)   
     
     print('computing combined feature bounds for: '. songs[i])
-    comboBounds  = GSBS_helper(songCombo, songCombo.shape[1])   
+    comboBounds  = GSBS_helper(songCombo, songCombo.shape[1], set_bounds)   
  
     # save bounds
     np.save(savedir + songs[i] + '/chroma_bounds_kmax_all_timepoints', chromaBounds)
