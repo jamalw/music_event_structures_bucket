@@ -143,10 +143,14 @@ def GSBS_helper(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     data = np.mean(shared_data[:,song_bounds[song_idx]:song_bounds[song_idx + 1]],axis=2)
     nTR = data.shape[1]
 
-    # Fit to all but one subject
+    # fit model
     K = len(human_bounds) + 1
-    ev = GSBS(x=data.T,kmax=nTR)
-    bounds = np.round(np.nonzero(ev.get_bounds())[0])    
+    ev = GSBS(x=data.T,kmax=K)
+    ev.fit()  
+ 
+    # get boundaries 
+    bounds = np.round(np.nonzero(ev.get_bounds(K))[0])    
+
     match = np.zeros(nPerm+1)
     perm_bounds = bounds.copy()
 
