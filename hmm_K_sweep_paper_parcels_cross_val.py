@@ -19,7 +19,7 @@ def fisher_mean(correlation, axis=None):
     return np.tanh(np.mean(np.arctanh(correlation), axis=axis))
 
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_input/parcels/Schaefer300/'
-savedir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/Schaefer300/allROIs/'
+savedir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/Schaefer300/allROIs/cross_val/'
 
 K_set = np.array((3,5,9,15,20,25,30,35,40,45))
 
@@ -49,46 +49,61 @@ ROI_WvA = np.zeros((16,len(K_set),nSubj))
 
 ##################################################################################
 for l in range(nSubj):
-	loo_idx = l 
+        loo_idx = l 
 	
-	for i in range(16):
-	    print('song number ',str(i))
-	    # grab start and end time for each song from bound vectors. for SRM data trained on run 1 and tested on run 2, use song name from run 1 to find index for song onset in run 2 bound vector 
-	    start_run1 = song_bounds_run1[i]
-	    end_run1   = song_bounds_run1[i+1]
-
-	    start_run2 = song_bounds_run2[songs_run2.index(songs_run1[i])]
-	    end_run2   = song_bounds_run2[songs_run2.index(songs_run1[i])+1]
-	    # chop song from bold data
-	    data1 = run1[:,:,start_run1:end_run1]
-	    data2 = run2[:,:,start_run2:end_run2]
-	    # average song-specific bold data from each run 
-	    data = (data1 + data2)/2
-	    others = np.mean(data[np.arange(data.shape[0]) != loo_idx,:,:], axis=0)
-	    loo = data[loo_idx,:,:]
-
-	    for j in range(len(K_set)):
-	        # Fit HMM
-	        ev = brainiak.eventseg.event.EventSegment(int(K_set[j]))
-	        ev.fit(data.T)
-	        events = np.argmax(ev.segments_[0],axis=1)
+        for i in range(16):
+            print('song number ',str(i))
+            # grab start and end time for each song from bound vectors. for SRM data trained on run 1 and tested on run 2, use song name from run 1 to find index for song onset in run 2 bound vector 
+            start_run1 = song_bounds_run1[i]
+            end_run1   = song_bounds_run1[i+1]
+            
+            start_run2 = song_bounds_run2[songs_run2.index(songs_run1[i])]
+            end_run2   = song_bounds_run2[songs_run2.index(songs_run1[i])+1]
+            # chop song from bold data
+            data1 = run1[:,:,start_run1:end_run1]
+            data2 = run2[:,:,start_run2:end_run2]
+            # average song-specific bold data from each run 
+            data = (data1 + data2)/2
+            others = np.mean(data[np.arange(data.shape[0]) != loo_idx,:,:], axis=0)
+            loo = data[loo_idx,:,:]
+            nTRs = data.shape[2]
+            for j in range(len(K_set)):
+                nPerm = 1000
+                within_across = np.zeros(nPerm+1)
+                # Fit HMM
+                ev = brainiak.eventseg.event.EventSegment(int(K_set[j]))
+                ev.fit(others.T)
+                events = np.argmax(ev.segments_[0],axis=1)
+                _, event_lengths = np.unique(events, return_counts=True)
 	                         
-	        max_event_length = stats.mode(events)[1][0]
-	        # compute timepoint by timepoint correlation matrix 
-	        cc = np.corrcoef(data.T) # Should be a time by time correlation matrix
+                max_event_length = stats.mode(events)[1][0]
+                # compute timepoint by timepoint correlation matrix 
+                cc = np.corrcoef(loo.T) # Should be a time by time correlation matrix
 	        
-	        # Create a mask to only look at values up to max_event_length
-	        local_mask = np.zeros(cc.shape, dtype=bool)
-	        for k in range(1,max_event_length):
-	            local_mask[np.diag(np.ones(cc.shape[0]-k, dtype=bool), k)] = True
+                # Create a mask to only look at values up to max_event_length
+                local_mask = np.zeros(cc.shape, dtype=bool)
+                for k in range(1,max_event_length):
+                    local_mask[np.diag(np.ones(cc.shape[0]-k, dtype=bool), k)] = True
 	              
-	            # Compute within vs across boundary correlations
-	            same_event = events[:,np.newaxis] == events
-	            within = fisher_mean(cc[same_event*local_mask])
-	            across = fisher_mean(cc[(~same_event)*local_mask])
-	            within_across = within - across
-	            ROI_WvA[i,j,l] = within_across
+                # Compute within vs across boundary correlations, for real and permuted
+                for p in range(nPerm+1):
+                    same_event = events[:,np.newaxis] == events
+                    within = fisher_mean(cc[same_event*local_mask])
+                    across = fisher_mean(cc[(~same_event)*local_mask]) 
+                    within_across[p] = within - across
+                    
+                    np.random.seed(p)
+                    perm_lengths = np.random.permutation(event_lengths)
+                    events = np.zeros(nTRs, dtype=np.int)
+                    events[np.cumsum(perm_lengths[:-1])] = 1
+                    events = np.cumsum(events)
+                
+                zWvA = (within_across[0] - np.mean(within_across[1:]))/np.std(within_across[1:])    
+                ROI_WvA[i,j,l] = zWvA
 
+
+# average zWvA scores across subject folds
+ROI_WvA_mean = np.mean(ROI_WvA,axis=2)
 
 # computing average event lengths using song durations divided by number of events
 durs_run1_new = durs_run1[:,np.newaxis]
@@ -100,7 +115,7 @@ x = event_lengths.ravel()
 
 test_x = np.linspace(min(x), max(x), num=100)
 
-y = ROI_WvA.ravel()
+y = ROI_WvA_mean.ravel()
 KR = KernelReg(y,x,var_type='c')
 KR_w_bw = KernelReg(y,x,var_type='c', bw=KR.bw)
 smooth_wva = KR_w_bw.fit(unique_event_lengths)[0]
@@ -109,7 +124,7 @@ max_wva = np.max(smooth_wva)
 # compute roi's preferred event length in seconds
 ROI_pref_sec = unique_event_lengths[np.argmax(smooth_wva)]
 
-inputs = [ROI_WvA,smooth_wva,max_wva,ROI_pref_sec]
+inputs = [ROI_WvA_mean,smooth_wva,max_wva,ROI_pref_sec]
 dct = {}
 
 for i,j in zip(dict_names,inputs):
