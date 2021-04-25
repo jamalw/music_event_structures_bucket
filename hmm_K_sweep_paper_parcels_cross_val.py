@@ -37,7 +37,7 @@ songs_run2 = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_t
 
 durs_run2 = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135])
 
-dict_names = ['WvA_Songs_x_Ks','Smooth_WvA','Smooth_Max_WvA','Raw_Max_WvA','Pref_Event_Length_Sec']
+dict_names = ['zWvA_Songs_x_Ks','Smooth_WvA','Smooth_Max_WvA','Pref_Event_Length_Sec']
 
 # Load in data
 run1 = np.load(datadir + 'parcel' + roiNum + '_run1.npy')
@@ -103,7 +103,7 @@ for l in range(nSubj):
 
 
 # average zWvA scores across subject folds
-ROI_WvA_mean = np.mean(ROI_WvA,axis=2)
+ROI_zWvA_mean = np.mean(ROI_WvA,axis=2)
 
 # computing average event lengths using song durations divided by number of events
 durs_run1_new = durs_run1[:,np.newaxis]
@@ -115,7 +115,7 @@ x = event_lengths.ravel()
 
 test_x = np.linspace(min(x), max(x), num=100)
 
-y = ROI_WvA_mean.ravel()
+y = ROI_zWvA_mean.ravel()
 KR = KernelReg(y,x,var_type='c')
 KR_w_bw = KernelReg(y,x,var_type='c', bw=KR.bw)
 smooth_wva = KR_w_bw.fit(unique_event_lengths)[0]
@@ -124,7 +124,7 @@ max_wva = np.max(smooth_wva)
 # compute roi's preferred event length in seconds
 ROI_pref_sec = unique_event_lengths[np.argmax(smooth_wva)]
 
-inputs = [ROI_WvA_mean,smooth_wva,max_wva,ROI_pref_sec]
+inputs = [ROI_zWvA_mean,smooth_wva,max_wva,ROI_pref_sec]
 dct = {}
 
 for i,j in zip(dict_names,inputs):
