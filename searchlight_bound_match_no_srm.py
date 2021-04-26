@@ -133,18 +133,12 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     run1 = [X[i] for i in np.arange(0, int(len(X)/2))]
     run2 = [X[i] for i in np.arange(int(len(X)/2), len(X))]
 
-    # run SRM on sl data
-    if runNum == 0:
-        shared_data = SRM_V1(run2,run1,srm_k,n_iter)
-    elif runNum == 1:
-        shared_data = SRM_V1(run1,run2,srm_k,n_iter)
-    
     if runNum == 0:
         run1Data = np.asarray(run1)
-        data = np.mean(run1Data[:,song_bounds[song_idx]:song_bounds[song_idx + 1]],axis=0)
+        data = np.mean(run1Data[:,:,song_bounds[song_idx]:song_bounds[song_idx + 1]],axis=0)
     elif runNum == 1:
         run2Data = np.asarray(run2)
-        data = np.mean(run2Data[:,song_bounds[song_idx]:song_bounds[song_idx + 1]],axis=0)
+        data = np.mean(run2Data[:,:,song_bounds[song_idx]:song_bounds[song_idx + 1]],axis=0)
 
     nTR = data.shape[1]
 
@@ -190,13 +184,13 @@ for j in range(voxmean.shape[1]):
 print('Saving data to Searchlight Folder')
 print(songs[song_idx])
 if runNum == 0:
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_test_run1_split_merge_no_srm', results3d_real)
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_test_run1_split_merge_no_srm', results3d)
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_test_run1_split_merge_no_srm', results3d_perms)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_test_run1_split_merge_no_srm', results3d_real)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_test_run1_split_merge_no_srm', results3d)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_test_run1_split_merge_no_srm', results3d_perms)
 if runNum == 1:
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_test_run2_split_merge_no_srm', results3d_real)
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_test_run2_split_merge_no_srm', results3d)
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_test_run2_split_merge_no_srm', results3d_perms)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_test_run2_split_merge_no_srm', results3d_real)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_test_run2_split_merge_no_srm', results3d)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_test_run2_split_merge_no_srm', results3d_perms)
 
 
 
