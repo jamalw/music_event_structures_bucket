@@ -43,23 +43,6 @@ dict_names = ['zWvA_Songs_x_Ks','Smooth_WvA','Smooth_Max_WvA','Pref_Event_Length
 run1 = np.load(datadir + 'parcel' + roiNum + '_run1.npy')
 run2 = np.load(datadir + 'parcel' + roiNum + '_run2.npy')
 
-# Convert data into lists where each element is voxels by samples
-run1_list = []
-run2_list = []
-for i in range(0,run1.shape[0]):
-    run1_list.append(run1[i,:,:])
-    run2_list.append(run2[i,:,:])
-
-n_iter = 10
-features = 10
-
-# run SRM on parcels
-shared_data_test1 = SRM_V1(run2_list,run1_list,features,n_iter)
-shared_data_test2 = SRM_V1(run1_list,run2_list,features,n_iter)
-
-avg_response_test_run1 = sum(shared_data_test1)/len(shared_data_test1)
-avg_response_test_run2 = sum(shared_data_test2)/len(shared_data_test2)
-
 nSubj = run1.shape[0]
 
 ROI_WvA = np.zeros((16,len(K_set),nSubj))
@@ -77,8 +60,8 @@ for l in range(nSubj):
             start_run2 = song_bounds_run2[songs_run2.index(songs_run1[i])]
             end_run2   = song_bounds_run2[songs_run2.index(songs_run1[i])+1]
             # chop song from bold data
-            data1 = avg_response_test_run1[:,start_run1:end_run1]
-            data2 = avg_response_test_run2[:,start_run2:end_run2]
+            data1 = run1[:,:,start_run1:end_run1]
+            data2 = run2[:,:,start_run2:end_run2]
             # average song-specific bold data from each run 
             data = (data1 + data2)/2
             others = np.mean(data[np.arange(data.shape[0]) != loo_idx,:,:], axis=0)
