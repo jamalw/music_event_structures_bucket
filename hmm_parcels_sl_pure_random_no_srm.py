@@ -121,19 +121,11 @@ for i in range(int(np.max(parcels))):
     run1 = np.load(parcel_dir + "parcel" + str(i+1) + "_run1.npy")
     run2 = np.load(parcel_dir + "parcel" + str(i+1) + "_run2.npy")
     
-    # run SRM on masked data
-    if runNum == 0:
-        shared_data = SRM_V1(run2,run1,srm_k,n_iter)
-    elif runNum == 1:
-        shared_data = SRM_V1(run1,run2,srm_k,n_iter)
-
-    data = np.mean(stats.zscore(np.dstack(shared_data),axis=1,ddof=1),axis=2)[:,start_idx:end_idx]
-    
     # average data without doing SRM
-    #if runNum == 0:
-    #    data = np.mean(run1,axis=0)[:,start_idx:end_idx]
-    #elif runNum == 1:
-    #    data = np.mean(run2,axis=0)[:,start_idx:end_idx]      
+    if runNum == 0:
+        data = np.mean(run1,axis=0)[:,start_idx:end_idx]
+    elif runNum == 1:
+        data = np.mean(run2,axis=0)[:,start_idx:end_idx]      
 
     # fit HMM to song data and return match data where first entry is true match score and all others are permutation scores
     print("Fitting HMM")
@@ -164,16 +156,16 @@ for i in range(int(np.max(parcels))):
     
 
 if runNum == 0:
-    pfn = savedir + "/pvals_srm_v1_test_run1_pure_random_split_merge_euclid"
-    zfn = savedir + "/zscores_srm_v1_test_run1_pure_random_split_merge_euclid"
-    mfn = savedir + "/match_scores_srm_v1_test_run1_pure_random_split_merge_euclid"
+    pfn = savedir + "/pvals_srm_v1_test_run1_pure_random_split_merge_no_srm"
+    zfn = savedir + "/zscores_srm_v1_test_run1_pure_random_split_merge_no_srm"
+    mfn = savedir + "/match_scores_srm_v1_test_run1_pure_random_split_merge_no_srm"
 elif runNum == 1:
-    pfn = savedir + "/pvals_srm_v1_test_run2_pure_random_split_merge_euclid"
-    zfn = savedir + "/zscores_srm_v1_test_run2_pure_random_split_merge_euclid"
-    mfn = savedir + "/match_scores_srm_v1_test_run2_pure_random_split_merge_euclid"
+    pfn = savedir + "/pvals_srm_v1_test_run2_pure_random_split_merge_no_srm"
+    zfn = savedir + "/zscores_srm_v1_test_run2_pure_random_split_merge_no_srm"
+    mfn = savedir + "/match_scores_srm_v1_test_run2_pure_random_split_merge_no_srm"
 
 
-#save_nifti(pvals, mask_img.affine, pfn) 
-#save_nifti(zscores, mask_img.affine, zfn)
-#save_nifti(match, mask_img.affine, mfn)
+save_nifti(pvals, mask_img.affine, pfn) 
+save_nifti(zscores, mask_img.affine, zfn)
+save_nifti(match, mask_img.affine, mfn)
 
