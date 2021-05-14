@@ -38,7 +38,9 @@ mask_reshape = np.reshape(mask,(91*109*91))
 
 human_bounds = np.load(datadir + 'prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + songs[song_idx] + '/' + songs[song_idx] + '_beh_seg.npy') + hrf
 
-def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
+GSBS_bounds  = np.load(datadir + 'prototype/link/scripts/GSBS_annotations/' + songs[song_idx] + '/combo_bounds_kmax_len_human.npy')
+
+def searchlight(coords,human_bounds,GSBS_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
     
     """run searchlight 
 
@@ -93,7 +95,7 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
                print("Running Searchlight")
                # only run function on searchlights with voxels greater than or equal to min_vox
                if data[0].shape[0] >= min_vox: 
-                   SL_match = HMM(data,human_bounds,song_idx,song_bounds,srm_k,hrf)
+                   SL_match = HMM(data,human_bounds,GSBS_bounds,song_idx,song_bounds,srm_k,hrf)
                    SL_results.append(SL_match)
                    SL_allvox.append(np.array(np.nonzero(SL_vox)[0])) 
     voxmean = np.zeros((coords.shape[0], nPerm+1))
@@ -107,7 +109,7 @@ def searchlight(coords,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
         vox_z[:,p] = (voxmean[:,p] - np.mean(voxmean[:,1:],axis=1))/np.std(voxmean[:,1:],axis=1) 
     return vox_z,voxmean
 
-def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
+def HMM(X,human_bounds,GSBS_bounds,song_idx,song_bounds,srm_k,hrf):
     
     """fit hidden markov model
   
@@ -152,10 +154,10 @@ def HMM(X,human_bounds,song_idx,song_bounds,srm_k,hrf):
     perm_bounds = bounds.copy()
 
     for p in range(nPerm+1):
-        for hb in human_bounds:
-            if np.any(np.abs(perm_bounds - hb) <= w):
+        for gs in GSBS_bounds:
+            if np.any(np.abs(perm_bounds - gs) <= w):
                 match[p] += 1
-        match[p] /= len(human_bounds)
+        match[p] /= len(GSBS_bounds)
         np.random.seed(p)
         perm_bounds = np.random.choice(nTR,K-1,replace=False) 
 
@@ -175,7 +177,7 @@ z = np.reshape(z,(z.shape[0]*z.shape[1]*z.shape[2]))
 coords = np.vstack((x,y,z)).T 
 coords_mask = coords[mask_reshape>0]
 print('Running Distribute...')
-voxmean,real_sl_scores = searchlight(coords_mask,human_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf) 
+voxmean,real_sl_scores = searchlight(coords_mask,human_bounds,GSBS_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf) 
 results3d[mask>0] = voxmean[:,0]
 results3d_real[mask>0] = real_sl_scores[:,0]
 for j in range(voxmean.shape[1]):
@@ -184,13 +186,13 @@ for j in range(voxmean.shape[1]):
 print('Saving data to Searchlight Folder')
 print(songs[song_idx])
 if runNum == 0:
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_test_run1_split_merge', results3d_real)
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_test_run1_split_merge', results3d)
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_test_run1_split_merge', results3d_perms)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_test_run1_split_merge_GSBS_kmax_len_human', results3d_real)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_test_run1_split_merge_GSBS_kmax_len_human', results3d)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_test_run1_split_merge_GSBS_kmax_len_human', results3d_perms)
 if runNum == 1:
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_test_run2_split_merge', results3d_real)
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_test_run2_split_merge', results3d)
-    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_test_run2_split_merge', results3d_perms)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/raw/globals_raw_srm_k_' + str(srm_k) + '_test_run2_split_merge_GSBS_kmax_len_human', results3d_real)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/zscores/globals_z_srm_k' + str(srm_k) + '_test_run2_split_merge_GSBS_kmax_len_human', results3d)
+    np.save('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/' + songs[song_idx] +'/perms/globals_z_srm_k' + str(srm_k) + '_test_run2_split_merge_GSBS_kmax_len_human', results3d_perms)
 
 
 
