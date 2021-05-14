@@ -38,7 +38,7 @@ mask_reshape = np.reshape(mask,(91*109*91))
 
 human_bounds = np.load(datadir + 'prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + songs[song_idx] + '/' + songs[song_idx] + '_beh_seg.npy') + hrf
 
-GSBS_bounds  = np.load(datadir + 'prototype/link/scripts/GSBS_annotations/' + songs[song_idx] + '/combo_bounds_kmax_len_human.npy')
+GSBS_bounds  = np.load(datadir + 'prototype/link/scripts/GSBS_annotations/' + songs[song_idx] + '/combo_bounds_kmax_len_human.npy') + hrf
 
 def searchlight(coords,human_bounds,GSBS_bounds,mask,subjs,song_idx,song_bounds,srm_k,hrf):
     
