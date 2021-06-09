@@ -21,10 +21,11 @@ chroma_match = np.zeros((len(songs),nPerm+1))
 mfcc_match = np.zeros((len(songs),nPerm+1))
 tempo_match = np.zeros((len(songs),nPerm+1))
 
-# initialize total feature bounds variables
+# initialize total feature and human bounds variables
 total_chroma_bounds = 0
 total_mfcc_bounds = 0
 total_tempo_bounds = 0
+total_human_bounds = 0
 
 # loop over each song and compute conditional probability that a human boundary occurs at the same time as a feature boundary across songs
 for s in range(len(songs)): 
@@ -38,6 +39,9 @@ for s in range(len(songs)):
     total_chroma_bounds += len(chroma_bounds)
     total_mfcc_bounds += len(mfcc_bounds)
     total_tempo_bounds += len(tempo_bounds)
+
+    # collect total number of human bounds
+    total_human_bounds += len(human_bounds)
 
     # get human bound event lengths
     event_lengths = np.diff(np.concatenate(([0],human_bounds,[song_durs[s]]))) 
@@ -70,6 +74,11 @@ chroma_conditional = chroma_match_sum/total_chroma_bounds
 mfcc_conditional = mfcc_match_sum/total_mfcc_bounds
 tempo_conditional = tempo_match_sum/total_tempo_bounds
 
+# compute conditional probability
+chroma_human_conditional = chroma_match_sum/total_human_bounds    
+mfcc_human_conditional  = mfcc_match_sum/total_human_bounds
+tempo_human_conditional = tempo_match_sum/total_human_bounds
+
 # plot conditionals vs nulls
 fig, (ax1,ax2,ax3) = plt.subplots(1,3,figsize=(17,5))
 im1 = ax1.hist(chroma_conditional[1:])
@@ -87,7 +96,27 @@ ax3.set_title('tempo',fontweight='bold')
 ax3.set_xlabel('p(human|tempo)',fontsize=14)
 ax3.axvline(x=tempo_conditional[0], color='r', linewidth=3)
 
-plt.savefig('plots/paper_versions/conditonal_human_vs_features.png')
+plt.savefig('plots/paper_versions/conditonal_feature_match_vs_total_feature_bounds.png')
+
+# plot conditionals vs nulls
+fig, (ax1,ax2,ax3) = plt.subplots(1,3,figsize=(17,5))
+im1 = ax1.hist(chroma_human_conditional[1:])
+ax1.set_title('chroma',fontweight='bold')
+ax1.set_xlabel('p(chroma match|human)',fontsize=14)
+ax1.axvline(x=chroma_human_conditional[0], color='r', linewidth=3)
+
+im2 = ax2.hist(mfcc_human_conditional[1:])
+ax2.set_title('mfcc',fontweight='bold')
+ax2.set_xlabel('p(mfcc match|human)',fontsize=14)
+ax2.axvline(x=mfcc_human_conditional[0], color='r', linewidth=3)
+
+im3 = ax3.hist(tempo_human_conditional[1:])
+ax3.set_title('tempo',fontweight='bold')
+ax3.set_xlabel('p(tempo match|human)',fontsize=14)
+ax3.axvline(x=tempo_human_conditional[0], color='r', linewidth=3)
+
+plt.savefig('plots/paper_versions/conditonal_feature_match_vs_total_human_bounds.png')
+
 
 
 
