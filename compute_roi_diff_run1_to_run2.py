@@ -74,7 +74,23 @@ for i in range(len(songs)):
     voxels_by_songs_run1[:,i] = masked_data_run1
     voxels_by_songs_run2[:,i] = masked_data_run2
 
-   
+# calculate song-specific match score differences between run 1 and run 2
+run1_vs_run2_diffs = voxels_by_songs_run2 - voxels_by_songs_run1
+
+# calculate tstats against zero for difference between match scores for 16 songs for run 2 minus run1 for each voxel separately and then do FDR
+tmap1D = np.zeros((run1_vs_run2_diffs.shape[0]))
+pmap1D = np.zeros((run1_vs_run2_diffs.shape[0]))
+qmap1D = np.zeros((run1_vs_run2_diffs.shape[0]))
+
+for j in range(run1_vs_run2_diffs.shape[0]):
+        tmap1D[j],pmap1D[j] = stats.ttest_1samp(run1_vs_run2_diffs[j,:],0,axis=0)
+        if run1_vs_run2_diffs[j,:].mean() > 0:
+                pmap1D[j] = pmap1D[j]/2
+        else:
+                pmap1D[j] = 1-pmap1D[j]/2
+
+qmap1D = FDR_p(pmap1D)
+ 
 
  
 
