@@ -44,8 +44,30 @@ def FDR_p(pvals):
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_human_bounds_fit_to_all/'
 savedir = datadir + 'ttest_results/'
 
+parcelNum = 200
+
+parcels = nib.load("/jukebox/norman/jamalw/MES/data/CBIG/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI/Schaefer2018_" + str(parcelNum) + "Parcels_17Networks_order_FSLMNI152_2mm.nii.gz").get_data()
+
+# Schaefer 200 bil mPFC
+parcel_idx = [80,187]
+#parcel_idx = []
+
 mask = nib.load('/jukebox/norman/jamalw/MES/data/mask_nonan.nii')
-mask_reshape = np.reshape(mask.get_data(),(91*109*91))
+
+#mask_reshape = np.reshape(mask.get_data(),(91*109*91))
+
+# if mask includes parcels then get coordinates with mask and parcels
+brain_mask = np.zeros_like(mask.get_data())
+
+if len(parcel_idx) == 0:
+    mask_reshape = np.reshape(mask.get_data(),(91*109*91))
+    brain_mask[mask.get_data() > 0] = 1
+elif len(parcel_idx) > 0:
+    for p in range(len(parcel_idx)):
+        brain_mask[(parcels == parcel_idx[p]) & (mask.get_data() > 0)] = 1
+
+mask_reshape = np.reshape(brain_mask,(91*109*91))
+##################################################
 
 # create coords matrix
 x,y,z = np.mgrid[[slice(dm) for dm in tuple((91,109,91))]]
@@ -75,8 +97,8 @@ all_songs1D_run2 = np.zeros((coords_mask.shape[0],len(songs)))
 for s in range(len(songs)):
     data_run1 = np.load(datadir + songs[s] + '/zscores/globals_z_test_run1_split_merge_no_srm.npy')
     data_run2 = np.load(datadir + songs[s] + '/zscores/globals_z_test_run2_split_merge_no_srm.npy')
-    all_songs1D_run1[:,s] = data_run1[mask.get_data() != 0]
-    all_songs1D_run2[:,s] = data_run2[mask.get_data() != 0]
+    all_songs1D_run1[:,s] = data_run1[brain_mask != 0]
+    all_songs1D_run2[:,s] = data_run2[brain_mask != 0]
 
 # compute ttest between run 1 and run 2 song-specific match scores within a given voxel
 for c in range(coords_mask.shape[0]):
@@ -85,20 +107,20 @@ for c in range(coords_mask.shape[0]):
 
 
 # do FDR
-qmap1D = FDR_p(pmap1D)
+qmap1D = FDR_p(pmap1D/2)
  
 # Fit data back into whole brain, then save
 tmap_final1D[mask_reshape==1] = tmap1D
 tmap3D = np.reshape(tmap_final1D,(91,109,91))
-save_nifti(tmap3D,mask.affine,savedir + 'tstats_map_run2_minus_run1_no_srm.nii.gz')
+save_nifti(tmap3D,mask.affine,savedir + 'tstats_map_run2_minus_run1_no_srm_mPFC.nii.gz')
 
 pmap_final1D[mask_reshape==1] = pmap1D
 pmap3D = np.reshape(pmap_final1D,(91,109,91))
-save_nifti(pmap3D,mask.affine,savedir + 'pstats_map_run2_minus_run1_no_srm.nii.gz')
+save_nifti(pmap3D,mask.affine,savedir + 'pstats_map_run2_minus_run1_no_srm_mPFC.nii.gz')
 
 qmap_final1D[mask_reshape==1] = qmap1D
 qmap3D = np.reshape(qmap_final1D,(91,109,91))
-save_nifti(qmap3D,mask.affine,savedir + 'qstats_map_run2_minus_run1_no_srm.nii.gz')
+save_nifti(qmap3D,mask.affine,savedir + 'qstats_map_run2_minus_run1_no_srm_mPFC.nii.gz')
 
 
 
