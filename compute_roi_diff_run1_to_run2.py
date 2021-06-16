@@ -68,8 +68,8 @@ voxels_by_songs_run2 = np.zeros((brain_mask[brain_mask == 1].shape[0],len(songs)
 
 for i in range(len(songs)):
     # load data for each run separately
-    data_run1 = np.load(datadir + songs[i] + '/zscores/globals_z_test_run1_split_merge_no_srm.npy')
-    data_run2 = np.load(datadir + songs[i] + '/zscores/globals_z_test_run2_split_merge_no_srm.npy')
+    data_run1 = np.load(datadir + songs[i] + '/raw/globals_raw_test_run1_split_merge_no_srm.npy')
+    data_run2 = np.load(datadir + songs[i] + '/raw/globals_raw_test_run2_split_merge_no_srm.npy')
     
     # extract voxels from data for each run separately using brain mask
     masked_data_run1 = data_run1[brain_mask == 1]
