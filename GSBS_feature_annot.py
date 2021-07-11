@@ -28,8 +28,9 @@ savedir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/GSBS_annotations/'
 chroma = np.load(datadir + 'chromaRun1_no_hrf.npy')
 mfcc   = np.load(datadir + 'mfccRun1_no_hrf.npy')[0:12,:]
 tempo  = np.load(datadir + 'tempoRun1_12PC_singles_no_hrf.npy')
+spect  = np.load(datadir + 'spectRun1_12PC_no_hrf.npy')
 
-for i in [6]:
+for i in range(len(songs)):
     # load human bounds
     human_bounds = np.load('/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/' + songs[i] + '/' + songs[i] + '_beh_seg.npy')
 
@@ -37,7 +38,9 @@ for i in [6]:
     songChroma = chroma[:,song_bounds[i]:song_bounds[i+1]]
     songMFCC = mfcc[:,song_bounds[i]:song_bounds[i+1]]
     songTempo = tempo[:,song_bounds[i]:song_bounds[i+1]]
-    songCombo = zscore(np.vstack((songChroma,songMFCC,songTempo)),axis=1)    
+    songSpect = spect[:,song_bounds[i]:song_bounds[i+1]]
+    songCombo = zscore(np.vstack((songChroma,songMFCC,songTempo,songSpect)),axis=1)    
+    
 
     #K = len(human_bounds) + 1
     K = songCombo.shape[1]
@@ -52,11 +55,15 @@ for i in [6]:
     print('computing tempo bounds for: ', songs[i])
     tempoBounds  = GSBS_helper(songTempo, K, set_bounds)   
     
+    print('computing spectrogram bounds for: ', songs[i])
+    spectBounds  = GSBS_helper(songSpect, K, set_bounds)   
+
     print('computing combined feature bounds for: ', songs[i])
     comboBounds  = GSBS_helper(songCombo, K, set_bounds)   
  
     # save bounds
-    np.save(savedir + songs[i] + '/chroma_bounds_kmax_len_human', chromaBounds)
-    np.save(savedir + songs[i] + '/mfcc_bounds_kmax_len_human', mfccBounds)
-    np.save(savedir + songs[i] + '/tempo_bounds_kmax_len_human', tempoBounds)
-    np.save(savedir + songs[i] + '/combo_bounds_kmax_len_human', comboBounds)        
+    np.save(savedir + songs[i] + '/chroma_bounds_kmax_all_timepoints', chromaBounds)
+    np.save(savedir + songs[i] + '/mfcc_bounds_kmax_all_timepoints', mfccBounds)
+    np.save(savedir + songs[i] + '/tempo_bounds_kmax_all_timepoints', tempoBounds)
+    np.save(savedir + songs[i] + '/spect_bounds_kmax_all_timepoints', spectBounds)
+    np.save(savedir + songs[i] + '/combo_bounds_kmax_all_timepoints', comboBounds)        
