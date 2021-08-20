@@ -95,47 +95,62 @@ song_bounds2 = np.array([0,90,270,449,538,672,851,1031,1255,1480,1614,1704,1839,
 run1 = np.nan_to_num(stats.zscore(np.load(datadir + 'fdr_01_lprec_split_merge_run1_n25.npy'),axis=1,ddof=1))
 run2 = np.nan_to_num(stats.zscore(np.load(datadir + 'fdr_01_lprec_split_merge_run2_n25.npy'),axis=1,ddof=1))
 
-subj1 = run2[0:40,0:90,0]
-subj2 = run2[0:40,0:90,1]
-subj3 = run2[0:40,0:90,2]
-subj4 = run2[0:40,0:90,3]
+subj1 = run2[0:40,0:50,0]
+subj2 = run2[0:40,0:50,1]
+subj3 = run2[0:40,0:50,2]
+subj4 = run2[0:40,0:50,3]
 
 avg_subjs = np.mean([subj1, subj2, subj3, subj4],axis=0)
 
 plt.figure(3)
-plt.imshow(subj1)
+ax1 = plt.gca()
+ax1.imshow(subj1)
 plt.xticks([],[])
 plt.yticks([],[])
+ax1.patch.set_edgecolor('black')  
+ax1.patch.set_linewidth('5')  
 plt.tight_layout()
-plt.savefig('plots/paper_versions/example_subj1.png')
+plt.savefig('plots/paper_versions/example_subj1.png',bbox_inches='tight',pad_inches = 0)
 
 plt.figure(4)
-plt.imshow(subj2)
+ax2 = plt.gca()
+ax2.imshow(subj2)
 plt.xticks([],[])
 plt.yticks([],[])
 plt.tight_layout()
-plt.savefig('plots/paper_versions/example_subj2.png')
+ax2.patch.set_edgecolor('black')
+ax2.patch.set_linewidth('5')
+plt.savefig('plots/paper_versions/example_subj2.png',bbox_inches='tight',pad_inches = 0)
 
 plt.figure(5)
-plt.imshow(subj3)
+ax3 = plt.gca()
+ax3.imshow(subj3)
 plt.xticks([],[])
 plt.yticks([],[])
+ax3.patch.set_edgecolor('black')
+ax3.patch.set_linewidth('5')
 plt.tight_layout()
-plt.savefig('plots/paper_versions/example_subj3.png')
+plt.savefig('plots/paper_versions/example_subj3.png',bbox_inches='tight',pad_inches = 0)
 
 plt.figure(6)
-plt.imshow(subj4)
+ax4 = plt.gca()
+ax4.imshow(subj4)
 plt.xticks([],[])
 plt.yticks([],[])
+ax4.patch.set_edgecolor('black')
+ax4.patch.set_linewidth('5')
 plt.tight_layout()
-plt.savefig('plots/paper_versions/example_subj4.png')
+plt.savefig('plots/paper_versions/example_subj4.png',bbox_inches='tight',pad_inches = 0)
 
 plt.figure(7)
-plt.imshow(avg_subjs)
+ax5 = plt.gca()
+ax5.imshow(avg_subjs)
 plt.xticks([],[])
 plt.yticks([],[])
+ax5.patch.set_edgecolor('black')
+ax5.patch.set_linewidth('5')
 plt.tight_layout()
-plt.savefig('plots/paper_versions/example_avg_subjs.png')
+plt.savefig('plots/paper_versions/example_avg_subjs.png',bbox_inches='tight',pad_inches = 0)
 
 
 #cb = plt.colorbar()
