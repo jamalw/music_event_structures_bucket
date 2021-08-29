@@ -109,11 +109,14 @@ for s in range(n_subj):
         plot_data_no_labels(data, event_label_length)
         plt.savefig('plots/paper_versions/toy_time_series_no_srm_subj_' + str(s) + '.png')
     elif s == 4:
-        plot_data(data, event_label_length)
+        plot_data_no_labels(data, event_label_length)
         #cb = plt.colorbar()
         #cb.set_clim(-2.0, 2.0)
         #cb.ax.tick_params(labelsize=13)
         plt.savefig('plots/paper_versions/toy_time_series_no_srm_subj_mean.png')
+        # save out plot for cropping out x-ticks since the figure sizes won't match up otherwise
+        plot_data(data, event_label_length)
+        plt.savefig('plots/paper_versions/to_be_used_for_xticks.png')
         plot_colorbar(data, event_label_length)
         plt.savefig('plots/paper_versions/toy_time_series_no_srm_subj_mean_colorbar.png',bbox_inches='tight') 
 
