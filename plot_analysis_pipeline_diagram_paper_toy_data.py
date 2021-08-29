@@ -49,7 +49,7 @@ def plot_data_no_labels(data, t, create_fig=True, event_patterns = None):
         if event_patterns is not None:
             plt.figure(figsize=(6, 6))
         else:
-            plt.figure(figsize=(6, 3))
+            plt.figure(figsize=(8, 3))
     if event_patterns is not None:
         plt.figure(1)
     data_z = stats.zscore(data.T, axis=0)
@@ -73,8 +73,7 @@ def plot_colorbar(data, t, create_fig=True, event_patterns = None):
     im = plt.imshow(data_z, origin='lower',aspect='auto')
     plt.xlabel('Time (s)',fontsize=16,fontweight='bold')
     plt.ylabel('Voxels',fontsize=16,fontweight='bold')
-    plt.xticks(np.arange(0, 90, 10),fontsize=12)
-    plt.xticks(fontsize=18)
+    plt.xticks(np.arange(0, 90, 10),fontsize=22)
     plt.yticks([])
     ax3 = plt.gca()
     ax3.patch.set_edgecolor('black')
@@ -82,7 +81,7 @@ def plot_colorbar(data, t, create_fig=True, event_patterns = None):
     cb = plt.colorbar(ax=ax3)
     ax3.remove()
     im.set_clim(-2,2)
-    cb.ax.tick_params(labelsize=18) 
+    cb.ax.tick_params(labelsize=24) 
     plt.tight_layout()
 
 n_subj = 5
@@ -107,13 +106,13 @@ for s in range(n_subj):
     data = generate_data(data_lst[s])
     if s < 4:
         plot_data_no_labels(data, event_label_length)
-        plt.savefig('plots/paper_versions/toy_time_series_no_srm_subj_' + str(s) + '.png')
+        plt.savefig('plots/paper_versions/toy_time_series_no_srm_subj_' + str(s) + '.png',bbox_inches='tight',pad_inches=0.03)
     elif s == 4:
         plot_data_no_labels(data, event_label_length)
         #cb = plt.colorbar()
         #cb.set_clim(-2.0, 2.0)
         #cb.ax.tick_params(labelsize=13)
-        plt.savefig('plots/paper_versions/toy_time_series_no_srm_subj_mean.png')
+        plt.savefig('plots/paper_versions/toy_time_series_no_srm_subj_mean.png',bbox_inches='tight',pad_inches=0.03)
         # save out plot for cropping out x-ticks since the figure sizes won't match up otherwise
         plot_data(data, event_label_length)
         plt.savefig('plots/paper_versions/to_be_used_for_xticks.png')
