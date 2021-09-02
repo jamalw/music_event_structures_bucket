@@ -58,6 +58,11 @@ for s in range(len(songs)):
     tempo_perm_bounds = tempo_bounds.copy() 
     spect_perm_bounds = spect_bounds.copy()
 
+    chroma_event_lengths = np.diff(np.concatenate(([0],chroma_bounds,[song_durs[s]])))
+    mfcc_event_lengths = np.diff(np.concatenate(([0],mfcc_bounds,[song_durs[s]])))
+    tempo_event_lengths = np.diff(np.concatenate(([0],tempo_bounds,[song_durs[s]])))
+    spect_event_lengths = np.diff(np.concatenate(([0],spect_bounds,[song_durs[s]])))
+
     # add a 1 to human_bounds_matches variable if human bound matches a feature bound 
     for hb in human_bounds:
     # initalize/reset variable that will count number of feature to human matches to determine if a given human boundary has any match at all
@@ -85,10 +90,10 @@ for s in range(len(songs)):
                 spect_match[s,p] += 1
 
         np.random.seed(p)
-        chroma_perm_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
-        mfcc_perm_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
-        tempo_perm_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
-        spect_perm_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
+        chroma_perm_bounds = np.cumsum(np.random.permutation(chroma_event_lengths))[:-1]
+        mfcc_perm_bounds = np.cumsum(np.random.permutation(mfcc_event_lengths))[:-1]
+        tempo_perm_bounds = np.cumsum(np.random.permutation(tempo_event_lengths))[:-1]
+        spect_perm_bounds = np.cumsum(np.random.permutation(spect_event_lengths))[:-1]
 
 # sum matches across songs and permutations
 chroma_match_sum = np.sum(chroma_match,axis=0)
@@ -96,13 +101,13 @@ mfcc_match_sum = np.sum(mfcc_match,axis=0)
 tempo_match_sum = np.sum(tempo_match,axis=0)
 spect_match_sum = np.sum(spect_match,axis=0)
 
-# compute conditional probability
+# compute conditional probability of human feature match given a feature boundary
 chroma_conditional = chroma_match_sum/total_chroma_bounds    
 mfcc_conditional = mfcc_match_sum/total_mfcc_bounds
 tempo_conditional = tempo_match_sum/total_tempo_bounds
 spect_conditional = spect_match_sum/total_spect_bounds
 
-# compute conditional probability
+# compute conditional probability of human feature match given a human boundary
 chroma_human_conditional = chroma_match_sum/total_human_bounds    
 mfcc_human_conditional  = mfcc_match_sum/total_human_bounds
 tempo_human_conditional = tempo_match_sum/total_human_bounds
@@ -145,7 +150,7 @@ spect_conditional_pval = sc.norm.sf((spect_conditional[0] - np.mean(spect_condit
 
 print('p(human|spect) = ' + str(spect_conditional[0]) + ' pval = ' + str(spect_conditional_pval))
 
-#plt.savefig('plots/paper_versions/conditonal_feature_match_vs_total_feature_bounds_with_spect.png')
+plt.savefig('plots/paper_versions/conditonal_feature_match_vs_total_feature_bounds_with_spect_fixed_null.png')
 
 # plot conditionals vs nulls
 fig, axs = plt.subplots(2,2,figsize=(17,17))
@@ -184,7 +189,7 @@ spect_human_conditional_pval = sc.norm.sf((spect_human_conditional[0] - np.mean(
 
 print('p(spect match|human) = ' + str(spect_human_conditional[0]) + ' pval = ' + str(spect_human_conditional_pval))
 
-#plt.savefig('plots/paper_versions/conditonal_feature_match_vs_total_human_bounds_with_spect.png')
+plt.savefig('plots/paper_versions/conditonal_feature_match_vs_total_human_bounds_with_spect_fixed_null.png')
 
 
 
