@@ -17,19 +17,12 @@ w = 3
 # set number of permutations
 nPerm = 1000
 
-# initialize match variables
-chroma_match = np.zeros((len(songs),nPerm+1))
-mfcc_match = np.zeros((len(songs),nPerm+1))
-tempo_match = np.zeros((len(songs),nPerm+1))
-spect_match = np.zeros((len(songs),nPerm+1))
-
 # initialize total feature and human bounds variables
-total_chroma_bounds = 0
-total_mfcc_bounds = 0
-total_tempo_bounds = 0
-total_spect_bounds = 0
-total_human_bounds = 0
-total_human_bounds_no_match = 0
+no_match = 0
+one_match = 0
+two_match = 0
+three_match = 0
+four_match = 0
 
 # loop over each song and compute conditional probability that a human boundary occurs at the same time as a feature boundary across songs
 for s in range(len(songs)): 
@@ -40,19 +33,10 @@ for s in range(len(songs)):
     tempo_bounds = np.load(datadir + 'GSBS_annotations/' + songs[s] + '/tempo_bounds_kmax_all_timepoints.npy')   
     spect_bounds = np.load(datadir + 'GSBS_annotations/' + songs[s] + '/spect_bounds_kmax_all_timepoints.npy')    
  
-    # collect total number of feature bounds
-    total_chroma_bounds += len(chroma_bounds)
-    total_mfcc_bounds += len(mfcc_bounds)
-    total_tempo_bounds += len(tempo_bounds)
-    total_spect_bounds += len(spect_bounds)
-
-    # collect total number of human bounds
-    total_human_bounds += len(human_bounds)
-
     # get human bound event lengths
     event_lengths = np.diff(np.concatenate(([0],human_bounds,[song_durs[s]]))) 
 
-    # compute sum of matches between GSBS bounds and human bounds for each feature separately, counting as a match if 3 seconds away from each other
+    # compute number of feature matches corresponding to human annotation, counting as a match if 3 seconds away from each other
 
     # add a 1 to human_bounds_matches variable if human bound matches a feature bound 
     for hb in human_bounds:
@@ -66,22 +50,31 @@ for s in range(len(songs)):
             human_bounds_matches += 1
         if np.any(np.abs(spect_bounds - hb) <= w):
             human_bounds_matches += 1
+        # tally up number of human to feature matches 
         if human_bounds_matches == 0:
-            total_human_bounds_no_match += 1
+            no_match += 1
+        if human_bounds_matches == 1:
+            one_match += 1
+        if human_bounds_matches == 2:
+            two_match += 1
+        if human_bounds_matches == 3:
+            three_match += 1
+        if human_bounds_matches == 4:
+            four_match += 1
 
-    for p in range(nPerm+1):
-        for hb in human_bounds:
-            if np.any(np.abs(chroma_bounds - hb) <= w):
-                chroma_match[s,p] += 1
-            if np.any(np.abs(mfcc_bounds - hb) <= w):
-                mfcc_match[s,p] += 1
-            if np.any(np.abs(tempo_bounds - hb) <= w):
-                tempo_match[s,p] += 1
-            if np.any(np.abs(spect_bounds - hb) <= w):
-                spect_match[s,p] += 1
-
-        np.random.seed(p)
-        human_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
+#    for p in range(nPerm+1):
+#        for hb in human_bounds:
+#            if np.any(np.abs(chroma_bounds - hb) <= w):
+#                chroma_match[s,p] += 1
+#            if np.any(np.abs(mfcc_bounds - hb) <= w):
+#                mfcc_match[s,p] += 1
+#            if np.any(np.abs(tempo_bounds - hb) <= w):
+#                tempo_match[s,p] += 1
+#            if np.any(np.abs(spect_bounds - hb) <= w):
+#                spect_match[s,p] += 1
+#
+#        np.random.seed(p)
+#        human_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
 
 # sum matches across songs and permutations
 chroma_match_sum = np.sum(chroma_match,axis=0)
