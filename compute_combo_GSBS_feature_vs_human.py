@@ -67,6 +67,7 @@ for s in range(len(songs)):
         np.random.seed(p)
         human_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
 
+# convert raw match counts to tally
 all_match = np.concatenate(([np.zeros(int(no_match[0])),np.ones(int(one_match[0])), np.ones(int(two_match[0]))*2, np.ones(int(three_match[0]))*3, np.ones(int(four_match[0]))*4]))
 
 no_match_null = np.zeros(int(np.mean(no_match[1:])))
@@ -77,6 +78,7 @@ four_match_null = np.ones(int(np.mean(four_match[1:]))) * 4
 
 all_match_null = np.concatenate((no_match_null,one_match_null,two_match_null,three_match_null,four_match_null)) 
 
+# plot data
 fig, axs = plt.subplots(1,1,figsize=(8,6))
 
 data = all_match
@@ -92,8 +94,18 @@ plt.hist(data_null, np.arange(left_of_first_bin, right_of_last_bin + d, d),alpha
 plt.xticks(fontsize = 17) 
 plt.yticks(fontsize = 17)
 axs.set_xlabel('# of Acoustic Features That Change',fontsize=18)
-axs.set_ylabel('Number of Human Annotations',fontsize=18)
+axs.set_ylabel('Matches to Human Annotations',fontsize=18)
 
+# compute pvalues
+no_match_pval = sc.norm.sf((no_match[0] - np.mean(no_match[1:]))/np.std(no_match[1:]))
+one_match_pval = sc.norm.sf((one_match[0] - np.mean(one_match[1:]))/np.std(one_match[1:]))
+two_match_pval = sc.norm.sf((two_match[0] - np.mean(two_match[1:]))/np.std(two_match[1:]))
+three_match_pval = sc.norm.sf((three_match[0] - np.mean(three_match[1:]))/np.std(three_match[1:]))
+four_match_pval = sc.norm.sf((four_match[0] - np.mean(four_match[1:]))/np.std(four_match[1:]))
 
-
-
+# print pvals
+print("no match pval: ", no_match_pval)
+print("one match pval: ", one_match_pval)
+print("two match pval: ", two_match_pval)
+print("three match pval: ", three_match_pval)
+print("four match pval: ", four_match_pval)
