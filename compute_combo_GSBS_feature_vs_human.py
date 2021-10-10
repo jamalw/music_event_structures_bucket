@@ -95,6 +95,7 @@ plt.xticks(fontsize = 17)
 plt.yticks(fontsize = 17)
 axs.set_xlabel('# of Acoustic Features That Change',fontsize=18)
 axs.set_ylabel('Matches to Human Annotations',fontsize=18)
+axs.legend(['True','Null'],fontsize=14)
 
 # compute pvalues
 no_match_pval = sc.norm.sf((no_match[0] - np.mean(no_match[1:]))/np.std(no_match[1:]))
@@ -109,3 +110,18 @@ print("one match pval: ", one_match_pval)
 print("two match pval: ", two_match_pval)
 print("three match pval: ", three_match_pval)
 print("four match pval: ", four_match_pval)
+
+# add pvalues to bar plots
+match_pvals = np.array([no_match_pval,one_match_pval,two_match_pval,three_match_pval,four_match_pval])
+
+data_y_max = np.maximum(np.unique(data,return_counts=True)[1].astype('int'),np.unique(data_null,return_counts=True)[1].astype('int'))
+
+labels = ['p = %.3f' % no_match_pval, 'p = %.3f' % one_match_pval, 'p = %.3f' % two_match_pval + '**', 'p = %.3f' % three_match_pval, 'p = %.3f' % four_match_pval + '**']
+xloc = np.arange(len(np.unique(data)))
+
+for i in range(len(xloc)):
+    plt.text(x = xloc[i]-0.4 , y = data_y_max[i]+0.2, s = labels[i], size = 12)
+
+plt.tight_layout()
+
+plt.savefig('plots/paper_versions/combo_feature_match_to_humans')
