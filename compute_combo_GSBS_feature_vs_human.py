@@ -76,103 +76,25 @@ for s in range(len(songs)):
 #        np.random.seed(p)
 #        human_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
 
-# sum matches across songs and permutations
-chroma_match_sum = np.sum(chroma_match,axis=0)
-mfcc_match_sum = np.sum(mfcc_match,axis=0)
-tempo_match_sum = np.sum(tempo_match,axis=0)
-spect_match_sum = np.sum(spect_match,axis=0)
-
-# compute conditional probability of human feature match given a feature boundary
-chroma_conditional = chroma_match_sum/total_chroma_bounds    
-mfcc_conditional = mfcc_match_sum/total_mfcc_bounds
-tempo_conditional = tempo_match_sum/total_tempo_bounds
-spect_conditional = spect_match_sum/total_spect_bounds
+all_match = np.concatenate(([np.zeros(no_match),np.ones(one_match), np.ones(two_match)*2, np.ones(three_match)*3, np.ones(four_match)*4]))
 
 
-# compute conditional probability of human feature match given a human boundary
-chroma_human_conditional = chroma_match_sum/total_human_bounds    
-mfcc_human_conditional  = mfcc_match_sum/total_human_bounds
-tempo_human_conditional = tempo_match_sum/total_human_bounds
-spect_human_conditional = spect_match_sum/total_human_bounds
+fig, axs = plt.subplots(1,1,figsize=(8,6))
 
-# plot conditionals vs nulls
-fig, axs = plt.subplots(2,2,figsize=(17,17))
-im1 = axs[0,0].hist(chroma_conditional[1:])
+data = all_match
+data = np.array(data)
 
-fig.suptitle('Probability of match given a feature boundary',fontweight='bold',fontsize=20)
-
-axs[0,0].set_title('chroma',fontweight='bold',fontsize=17)
-axs[0,0].set_xlabel('p(human|chroma)',fontsize=14)
-axs[0,0].axvline(x=chroma_conditional[0], color='r', linewidth=3)
-chroma_conditional_pval = sc.norm.sf((chroma_conditional[0] - np.mean(chroma_conditional[1:]))/np.std(chroma_conditional[1:]))
-
-print('p(human|chroma) = ' + str(chroma_conditional[0]) + ' pval = ' + str(chroma_conditional_pval) + ' null mean = ' + str(np.mean(chroma_conditional[1:])))
-
-im2 = axs[0,1].hist(mfcc_conditional[1:])
-axs[0,1].set_title('mfcc',fontweight='bold',fontsize=17)
-axs[0,1].set_xlabel('p(human|mfcc)',fontsize=14)
-axs[0,1].axvline(x=mfcc_conditional[0], color='r', linewidth=3)
-mfcc_conditional_pval = sc.norm.sf((mfcc_conditional[0] - np.mean(mfcc_conditional[1:]))/np.std(mfcc_conditional[1:]))
-
-print('p(human|mfcc) = ' + str(mfcc_conditional[0]) + ' pval = ' + str(mfcc_conditional_pval) + ' null mean = ' + str(np.mean(mfcc_conditional[1:])))
-
-im3 = axs[1,0].hist(tempo_conditional[1:])
-axs[1,0].set_title('tempo',fontweight='bold',fontsize=17)
-axs[1,0].set_xlabel('p(human|tempo)',fontsize=14)
-axs[1,0].axvline(x=tempo_conditional[0], color='r', linewidth=3)
-tempo_conditional_pval = sc.norm.sf((tempo_conditional[0] - np.mean(tempo_conditional[1:]))/np.std(tempo_conditional[1:]))
-
-print('p(human|tempo) = ' + str(tempo_conditional[0]) + ' pval = ' + str(tempo_conditional_pval) + ' null mean = ' + str(np.mean(tempo_conditional[1:])))
-
-im4 = axs[1,1].hist(spect_conditional[1:])
-axs[1,1].set_title('spect',fontweight='bold',fontsize=17)
-axs[1,1].set_xlabel('p(human|spectrogram)',fontsize=14)
-axs[1,1].axvline(x=spect_conditional[0], color='r', linewidth=3)
-spect_conditional_pval = sc.norm.sf((spect_conditional[0] - np.mean(spect_conditional[1:]))/np.std(spect_conditional[1:]))
-
-print('p(human|spect) = ' + str(spect_conditional[0]) + ' pval = ' + str(spect_conditional_pval) + ' null mean = ' + str(np.mean(spect_conditional[1:])))
-
-#plt.savefig('plots/paper_versions/conditonal_feature_match_vs_total_feature_bounds_with_spect_fixed_null.png')
-
-# plot conditionals vs nulls
-fig, axs = plt.subplots(2,2,figsize=(17,17))
-
-fig.suptitle('Probability of match given a human boundary',fontweight='bold',fontsize=20)
-
-im1 = axs[0,0].hist(chroma_human_conditional[1:])
-axs[0,0].set_title('chroma',fontweight='bold',fontsize=17)
-axs[0,0].set_xlabel('p(chroma match|human)',fontsize=14)
-axs[0,0].axvline(x=chroma_human_conditional[0], color='r', linewidth=3)
-chroma_human_conditional_pval = sc.norm.sf((chroma_human_conditional[0] - np.mean(chroma_human_conditional[1:]))/np.std(chroma_human_conditional[1:]))
-
-#print('p(chroma match|human) = ' + str(chroma_human_conditional[0]) + ' pval = ' + str(chroma_human_conditional_pval))
-
-im2 = axs[0,1].hist(mfcc_human_conditional[1:])
-axs[0,1].set_title('mfcc',fontweight='bold',fontsize=17)
-axs[0,1].set_xlabel('p(mfcc match|human)',fontsize=14)
-axs[0,1].axvline(x=mfcc_human_conditional[0], color='r', linewidth=3)
-mfcc_human_conditional_pval = sc.norm.sf((mfcc_human_conditional[0] - np.mean(mfcc_human_conditional[1:]))/np.std(mfcc_human_conditional[1:]))
-
-#print('p(mfcc match|human) = ' + str(mfcc_human_conditional[0]) + ' pval = ' + str(mfcc_human_conditional_pval))
-
-im3 = axs[1,0].hist(tempo_human_conditional[1:])
-axs[1,0].set_title('tempo',fontweight='bold',fontsize=17)
-axs[1,0].set_xlabel('p(tempo match|human)',fontsize=14)
-axs[1,0].axvline(x=tempo_human_conditional[0], color='r', linewidth=3)
-tempo_human_conditional_pval = sc.norm.sf((tempo_human_conditional[0] - np.mean(tempo_human_conditional[1:]))/np.std(tempo_human_conditional[1:]))
-
-#print('p(tempo match|human) = ' + str(tempo_human_conditional[0]) + ' pval = ' + str(tempo_human_conditional_pval))
-
-im4 = axs[1,1].hist(spect_human_conditional[1:])
-axs[1,1].set_title('spectrogram',fontweight='bold')
-axs[1,1].set_xlabel('p(spectrogram match|human)',fontsize=14)
-axs[1,1].axvline(x=spect_human_conditional[0], color='r', linewidth=3)
-spect_human_conditional_pval = sc.norm.sf((spect_human_conditional[0] - np.mean(spect_human_conditional[1:]))/np.std(spect_human_conditional[1:]))
-
-#print('p(spect match|human) = ' + str(spect_human_conditional[0]) + ' pval = ' + str(spect_human_conditional_pval))
-
-#plt.savefig('plots/paper_versions/conditonal_feature_match_vs_total_human_bounds_with_spect_fixed_null.png')
-
-
-
-
+d = np.diff(np.unique(data)).min()
+left_of_first_bin = data.min() - float(d)/2
+right_of_last_bin = data.max() + float(d)/2
+plt.hist(data, np.arange(left_of_first_bin, right_of_last_bin + d, d),alpha=0.5, histtype='bar', ec='black')
+plt.xticks(fontsize = 17) 
+plt.yticks(fontsize = 17)
+axs.set_xlabel('Number of Overlapping Features',fontsize=18)
+axs.set_ylabel('Count',fontsize=18)
+#fig.suptitle('Probability of match given a feature boundary',fontweight='bold',fontsize=20)
+#
+#axs[0,0].set_title('chroma',fontweight='bold',fontsize=17)
+#axs[0,0].set_xlabel('p(human|chroma)',fontsize=14)
+#axs[0,0].axvline(x=chroma_conditional[0], color='r', linewidth=3)
+#
