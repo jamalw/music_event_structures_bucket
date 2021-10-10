@@ -18,11 +18,12 @@ w = 3
 nPerm = 1000
 
 # initialize total feature and human bounds variables
-no_match = 0
-one_match = 0
-two_match = 0
-three_match = 0
-four_match = 0
+no_match = np.zeros(nPerm+1)
+one_match = np.zeros(nPerm+1)
+two_match = np.zeros(nPerm+1)
+three_match = np.zeros(nPerm+1)
+four_match = np.zeros(nPerm+1)
+
 
 # loop over each song and compute conditional probability that a human boundary occurs at the same time as a feature boundary across songs
 for s in range(len(songs)): 
@@ -38,63 +39,61 @@ for s in range(len(songs)):
 
     # compute number of feature matches corresponding to human annotation, counting as a match if 3 seconds away from each other
 
-    # add a 1 to human_bounds_matches variable if human bound matches a feature bound 
-    for hb in human_bounds:
-    # initalize/reset variable that will count number of feature to human matches to determine if a given human boundary has any match at all
-        human_bounds_matches = 0
-        if np.any(np.abs(chroma_bounds - hb) <= w):
-            human_bounds_matches += 1
-        if np.any(np.abs(mfcc_bounds - hb) <= w):
-            human_bounds_matches += 1
-        if np.any(np.abs(tempo_bounds - hb) <= w):
-            human_bounds_matches += 1
-        if np.any(np.abs(spect_bounds - hb) <= w):
-            human_bounds_matches += 1
-        # tally up number of human to feature matches 
-        if human_bounds_matches == 0:
-            no_match += 1
-        if human_bounds_matches == 1:
-            one_match += 1
-        if human_bounds_matches == 2:
-            two_match += 1
-        if human_bounds_matches == 3:
-            three_match += 1
-        if human_bounds_matches == 4:
-            four_match += 1
+    for p in range(nPerm+1):
+        # add a 1 to human_bounds_matches variable if human bound matches a feature bound 
+        for hb in human_bounds:
+        # initalize/reset variable that will count number of feature to human matches to determine if a given human boundary has any match at all
+            human_bounds_matches = 0
+            if np.any(np.abs(chroma_bounds - hb) <= w):
+                human_bounds_matches += 1
+            if np.any(np.abs(mfcc_bounds - hb) <= w):
+                human_bounds_matches += 1
+            if np.any(np.abs(tempo_bounds - hb) <= w):
+                human_bounds_matches += 1
+            if np.any(np.abs(spect_bounds - hb) <= w):
+                human_bounds_matches += 1
+            # tally up number of human to feature matches 
+            if human_bounds_matches == 0:
+                no_match[p] += 1
+            if human_bounds_matches == 1:
+                one_match[p] += 1
+            if human_bounds_matches == 2:
+                two_match[p] += 1
+            if human_bounds_matches == 3:
+                three_match[p] += 1
+            if human_bounds_matches == 4:
+                four_match[p] += 1
 
-#    for p in range(nPerm+1):
-#        for hb in human_bounds:
-#            if np.any(np.abs(chroma_bounds - hb) <= w):
-#                chroma_match[s,p] += 1
-#            if np.any(np.abs(mfcc_bounds - hb) <= w):
-#                mfcc_match[s,p] += 1
-#            if np.any(np.abs(tempo_bounds - hb) <= w):
-#                tempo_match[s,p] += 1
-#            if np.any(np.abs(spect_bounds - hb) <= w):
-#                spect_match[s,p] += 1
-#
-#        np.random.seed(p)
-#        human_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
+        np.random.seed(p)
+        human_bounds = np.cumsum(np.random.permutation(event_lengths))[:-1]
 
-all_match = np.concatenate(([np.zeros(no_match),np.ones(one_match), np.ones(two_match)*2, np.ones(three_match)*3, np.ones(four_match)*4]))
+all_match = np.concatenate(([np.zeros(int(no_match[0])),np.ones(int(one_match[0])), np.ones(int(two_match[0]))*2, np.ones(int(three_match[0]))*3, np.ones(int(four_match[0]))*4]))
 
+no_match_null = np.zeros(int(np.mean(no_match[1:])))
+one_match_null = np.ones(int(np.mean(one_match[1:])))
+two_match_null = np.ones(int(np.mean(two_match[1:]))) * 2
+three_match_null = np.ones(int(np.mean(three_match[1:]))) * 3
+four_match_null = np.ones(int(np.mean(four_match[1:]))) * 4
+
+all_match_null = np.concatenate((no_match_null,one_match_null,two_match_null,three_match_null,four_match_null)) 
 
 fig, axs = plt.subplots(1,1,figsize=(8,6))
 
 data = all_match
 data = np.array(data)
+data_null = all_match_null
+data_null = np.array(data_null)
 
 d = np.diff(np.unique(data)).min()
 left_of_first_bin = data.min() - float(d)/2
 right_of_last_bin = data.max() + float(d)/2
 plt.hist(data, np.arange(left_of_first_bin, right_of_last_bin + d, d),alpha=0.5, histtype='bar', ec='black')
+plt.hist(data_null, np.arange(left_of_first_bin, right_of_last_bin + d, d),alpha=0.5, histtype='bar', ec='black')
 plt.xticks(fontsize = 17) 
 plt.yticks(fontsize = 17)
-axs.set_xlabel('Number of Overlapping Features',fontsize=18)
-axs.set_ylabel('Count',fontsize=18)
-#fig.suptitle('Probability of match given a feature boundary',fontweight='bold',fontsize=20)
-#
-#axs[0,0].set_title('chroma',fontweight='bold',fontsize=17)
-#axs[0,0].set_xlabel('p(human|chroma)',fontsize=14)
-#axs[0,0].axvline(x=chroma_conditional[0], color='r', linewidth=3)
-#
+axs.set_xlabel('# of Acoustic Features That Change',fontsize=18)
+axs.set_ylabel('Number of Human Annotations',fontsize=18)
+
+
+
+
