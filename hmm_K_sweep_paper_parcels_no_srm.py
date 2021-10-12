@@ -23,6 +23,8 @@ numParcels = 300
 
 bootNum = int(sys.argv[1])
 
+nboot = 50
+
 K_set = np.array((3,5,9,15,20,25,30,35,40,45))
 
 #########################################################################################
@@ -48,8 +50,6 @@ for roiNum in range(numParcels):
     run2 = np.load(datadir + 'parcel' + str(roiNum + 1) + '_run2.npy')
 
     nSubj = run1.shape[0]
-
-    nboot = 50
 
     wVa_results = np.zeros((16,len(K_set),nboot))
 
