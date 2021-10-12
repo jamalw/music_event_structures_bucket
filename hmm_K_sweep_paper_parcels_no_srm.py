@@ -19,8 +19,9 @@ datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_in
 ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/'
 savedir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/hmm_K_sweep_paper_results/Schaefer300/allROIs_no_srm/'
 
+numParcels = 300
+
 bootNum = int(sys.argv[1])
-roiNum = str(sys.argv[1])
 
 K_set = np.array((3,5,9,15,20,25,30,35,40,45))
 
@@ -41,62 +42,63 @@ songs_run2 = ['St_Pauls_Suite', 'I_Love_Music', 'Moonlight_Sonata', 'Change_of_t
 
 durs_run2 = np.array([90,180,180,90,135,180,180,225,225,135,90,135,225,225,90,135])
 
-# Load in data and reshape for Schaefer parcellations where the dimensionality is nSubjs X nVox X Time whereas the dimensions for the data used in the original version of the analysis was nVox X Time X nSubjs 
-run1 = np.load(datadir + 'parcel' + roiNum + '_run1.npy')
-run2 = np.load(datadir + 'parcel' + roiNum + '_run2.npy')
+for roiNum in range(numParcels):
+    # Load in data and reshape for Schaefer parcellations where the dimensionality is nSubjs X nVox X Time whereas the dimensions for the data used in the original version of the analysis was nVox X Time X nSubjs 
+    run1 = np.load(datadir + 'parcel' + str(roiNum + 1) + '_run1.npy')
+    run2 = np.load(datadir + 'parcel' + str(roiNum + 1) + '_run2.npy')
 
-nSubj = run1.shape[0]
+    nSubj = run1.shape[0]
 
-nboot = 50
+    nboot = 50
 
-wVa_results = np.zeros((16,len(K_set),nboot))
+    wVa_results = np.zeros((16,len(K_set),nboot))
 
-np.random.seed(bootNum)
+    np.random.seed(bootNum)
 
-for b in range(nboot):
-        resamp_subjs = np.random.choice(nSubj, size=nSubj, replace=True)
-        run1_resample = run1[resamp_subjs,:,:]
-        run2_resample = run2[resamp_subjs,:,:]
+    for b in range(nboot):
+            resamp_subjs = np.random.choice(nSubj, size=nSubj, replace=True)
+            run1_resample = run1[resamp_subjs,:,:]
+            run2_resample = run2[resamp_subjs,:,:]
 
-        run1_resample_avg = np.mean(run1_resample,axis=0)
-        run2_resample_avg = np.mean(run2_resample,axis=0)
-
-
-	##################################################################################
-
-        for i in range(16):
-            print('song number ',str(i))
-            # grab start and end time for each song from bound vectors. for SRM data trained on run 1 and tested on run 2, use song name from run 1 to find index for song onset in run 2 bound vector 
-            start_run1 = song_bounds_run1[i]
-            end_run1   = song_bounds_run1[i+1] 
-            start_run2 = song_bounds_run2[songs_run2.index(songs_run1[i])]
-            end_run2  = song_bounds_run2[songs_run2.index(songs_run1[i])+1]
-            # chop song from bold data
-            data1 = run1_resample_avg[:,start_run1:end_run1]
-            data2 = run2_resample_avg[:,start_run2:end_run2]
-            # average song-specific bold data from each run 
-            data = (data1 + data2)/2
-            for j in range(len(K_set)):
-                # Fit HMM
-                ev = brainiak.eventseg.event.EventSegment(int(K_set[j]))
-                ev.fit(data.T)
-                events = np.argmax(ev.segments_[0],axis=1)
-                                 
-                max_event_length = stats.mode(events)[1][0]
-                # compute timepoint by timepoint correlation matrix 
-                cc = np.corrcoef(data.T) # Should be a time by time correlation matrix
-                         
-                # Create a mask to only look at values up to max_event_length
-                local_mask = np.zeros(cc.shape, dtype=bool)
-                for k in range(1,max_event_length):
-                    local_mask[np.diag(np.ones(cc.shape[0]-k, dtype=bool), k)] = True
-                      
-                    # Compute within vs across boundary correlations
-                    same_event = events[:,np.newaxis] == events
-                    within = fisher_mean(cc[same_event*local_mask])
-                    across = fisher_mean(cc[(~same_event)*local_mask])
-                    within_across = within - across
-                    wVa_results[i,j,b] = within_across
+            run1_resample_avg = np.mean(run1_resample,axis=0)
+            run2_resample_avg = np.mean(run2_resample,axis=0)
 
 
-np.save(savedir + 'parcel' + roiNUM + '_' + str(bootNum), wVa_results)
+    	##################################################################################
+
+            for i in range(16):
+                print('song number ',str(i))
+                # grab start and end time for each song from bound vectors. for SRM data trained on run 1 and tested on run 2, use song name from run 1 to find index for song onset in run 2 bound vector 
+                start_run1 = song_bounds_run1[i]
+                end_run1   = song_bounds_run1[i+1] 
+                start_run2 = song_bounds_run2[songs_run2.index(songs_run1[i])]
+                end_run2  = song_bounds_run2[songs_run2.index(songs_run1[i])+1]
+                # chop song from bold data
+                data1 = run1_resample_avg[:,start_run1:end_run1]
+                data2 = run2_resample_avg[:,start_run2:end_run2]
+                # average song-specific bold data from each run 
+                data = (data1 + data2)/2
+                for j in range(len(K_set)):
+                    # Fit HMM
+                    ev = brainiak.eventseg.event.EventSegment(int(K_set[j]))
+                    ev.fit(data.T)
+                    events = np.argmax(ev.segments_[0],axis=1)
+                                     
+                    max_event_length = stats.mode(events)[1][0]
+                    # compute timepoint by timepoint correlation matrix 
+                    cc = np.corrcoef(data.T) # Should be a time by time correlation matrix
+                             
+                    # Create a mask to only look at values up to max_event_length
+                    local_mask = np.zeros(cc.shape, dtype=bool)
+                    for k in range(1,max_event_length):
+                        local_mask[np.diag(np.ones(cc.shape[0]-k, dtype=bool), k)] = True
+                          
+                        # Compute within vs across boundary correlations
+                        same_event = events[:,np.newaxis] == events
+                        within = fisher_mean(cc[same_event*local_mask])
+                        across = fisher_mean(cc[(~same_event)*local_mask])
+                        within_across = within - across
+                        wVa_results[i,j,b] = within_across
+
+
+    np.save(savedir + 'parcel' + str(roiNUM + 1) + '_' + str(bootNum), wVa_results)
