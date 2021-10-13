@@ -1,6 +1,28 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as sc
+from scipy.stats import chisquare
+
+def chisq(True_dist, Null_dist):
+	# True_dist is a Length 5 array
+	# Null_dist is a 1000x5 array
+
+	# Compute mean of null distribution
+	mean_null = np.mean(Null_dist, axis=0)
+
+	# Compute how different True_dist is from mean_null
+	true_chi = chisquare(True_dist, mean_null)[0]
+
+	# Compute how different each null is from mean_null
+	null_chi = np.zeros(1000)
+	for i in range(1000):
+		null_chi[i] = chisquare(Null_dist[i,:], mean_null)[0]
+
+	# Count how often nulls are farther from mean_null than True dist is
+	p = np.mean(true_chi < null_chi)
+
+	print('True dist deviates from null dist, χ2 = ',true_chi,'p=',p)
+
 
 songs = ['Finlandia', 'Blue_Monk', 'I_Love_Music','Waltz_of_Flowers','Capriccio_Espagnole','Island','All_Blues','St_Pauls_Suite','Moonlight_Sonata','Symphony_Fantastique','Allegro_Moderato','Change_of_the_Guard','Boogie_Stop_Shuffle','My_Favorite_Things','The_Bird','Early_Summer']
 
@@ -124,4 +146,9 @@ for i in range(len(xloc)):
 
 plt.tight_layout()
 
-plt.savefig('plots/paper_versions/combo_feature_match_to_humans')
+#plt.savefig('plots/paper_versions/combo_feature_match_to_humans')
+
+real_dist = np.array([no_match[0],one_match[0],two_match[0],three_match[0],four_match[0]])
+null_dist = np.array([no_match[1:], one_match[1:], two_match[1:], three_match[1:], four_match[1:]])
+
+chisq(real_dist, null_dist.T)
