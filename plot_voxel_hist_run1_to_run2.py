@@ -12,13 +12,22 @@ from brainiak.funcalign.srm import SRM
 import sys
 from srm import SRM_V1
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import nibabel as nib
 
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/chris_dartmouth/data/'
 ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/'
-roi = bil_A1
+roi_dir = '/jukebox/norman/jamalw/MES/data/'
 
-for i in range(16):
-    song_number = i
+roi = 'bil_mPFC'
+
+roi_mask = nib.load(roi_dir + 'fdr_01_human_bounds_split_merge_' + roi + '_no_srm_bin.nii.gz').get_data()
+
+roi_shape = len(roi_mask[roi_mask == 1]) 
+
+corrs_run1_run2 = np.zeros((16,roi_shape))
+
+for j in range(16):
+    song_number = j
 
     #do_srm = int(sys.argv[2])
 
@@ -53,12 +62,12 @@ for i in range(16):
     run1 = stats.zscore(np.load(datadir + 'fdr_01_' + roi + '_split_merge_no_srm_run1_n25.npy'),axis=1, ddof=1)
     run2 = stats.zscore(np.load(datadir + 'fdr_01_' + roi + '_split_merge_no_srm_run2_n25.npy'), axis=1, ddof=1)
 
-    if do_srm == 0:
-        run1DataAvg = np.mean(run1,axis=2)
-        run2DataAvg = np.mean(run2,axis=2)
+    #if do_srm == 0:
+    run1DataAvg = np.mean(run1,axis=2)
+    run2DataAvg = np.mean(run2,axis=2)
 
-        song1 = run1DataAvg[:,start_run1:end_run1]
-        song2 = run2DataAvg[:,start_run2:end_run2]
+    song1 = run1DataAvg[:,start_run1:end_run1]
+    song2 = run2DataAvg[:,start_run2:end_run2]
     #elif do_srm == 1:
         # Convert data into lists where each element is voxels by samples
         #run1_list = []
@@ -77,43 +86,27 @@ for i in range(16):
         #avg_response_test_run1 = sum(shared_data_test1)/len(shared_data_test1)
         #avg_response_test_run2 = sum(shared_data_test2)/len(shared_data_test2)
 
-        song1 = avg_response_test_run1[:,start_run1:end_run1]
-        song2 = avg_response_test_run2[:,start_run2:end_run2]
+        #song1 = avg_response_test_run1[:,start_run1:end_run1]
+        #song2 = avg_response_test_run2[:,start_run2:end_run2]
 
-        # perform correlation on all voxels between run1 and run2
-        corrs_run1_run2 = np.zeros(song1.shape[0])
+    # perform correlation on all voxels between run1 and run2
+    for i in range(0,roi_shape):
+        corrs_run1_run2[song_number,i] = np.corrcoef(song1[i,:],song2[i,:])[0][1]
 
-        for i in range(song1.shape[0]):
-            corrs_run1_run2[i] = np.corrcoef(song1[i,:],song2[i,:])[0][1]
+avg_vox_corr = np.mean(corrs_run1_run2,axis=0)
 
-
-plt.figure(figsize=(12,12))
+plt.figure(figsize=(7,5))
 ax = plt.gca()
-im = ax.hist(corrs_run1_run2)
+plt.hist(avg_vox_corr,ec='black')
 
-for t in cbar.ax.get_yticklabels():
-     t.set_fontsize(31)
+plt.xlabel('correlation run1 to run2 (r)',fontsize=15)
+plt.ylabel('# of voxels',fontsize=15)
+plt.setp(ax.get_xticklabels(), fontsize=12)
+plt.setp(ax.get_yticklabels(), fontsize=12)
+plt.title('similarity run1 to run2 for all songs ' + roi,fontsize=15,fontweight='bold')
+plt.tight_layout()
 
-# Plot human boundaries
-for i in range(len(human_bounds)-1):
-    rect2 = patches.Rectangle((human_bounds[i],human_bounds[i]),human_bounds[i+1]-human_bounds[i],human_bounds[i+1]-human_bounds[i],linewidth=5,edgecolor='k',facecolor='none',label='Human Annotations')
-    ax.add_patch(rect2)
-
-song_names = ['Finlandia', 'Blue Monk', 'I Love Music','Waltz of Flowers','Capriccio Espagnole','Island','All Blues','St Pauls Suite','Moonlight Sonata','Symphony Fantastique','Allegro Moderato','Change of the Guard','Boogie Stop Shuffle','My Favorite Things','The Bird','Early Summer']
-
-ax.set_xlabel('TRs',fontsize=33)
-ax.set_ylabel('TRs',fontsize=33)
-plt.setp(ax.get_xticklabels(), fontsize=32,rotation=45)
-plt.setp(ax.get_yticklabels(), fontsize=32)
-
-#if do_srm == 0:
-#    ax.set_title('bil mPFC', fontsize=45,y=1.015,fontweight='bold')
-#    ax.set_title('bil prec ' + song_names[song_number] + ' run ' + str(runNum + 1),fontsize=36,y=1.015)
-#    plt.tight_layout()
-#    plt.savefig('plots/paper_versions/debug/no_srm_sl/' + roi + '/separate_runs/no_SRM/' + song_names[song_number] + '_' + roi + '_no_SRM_run' + str(runNum + 1))
-#elif do_srm == 1:   
-#    ax.set_title(roi + ' ' + song_names[song_number] + ' Run ' + str(runNum + 1),fontsize=32,fontweight='bold')    
-#    plt.savefig('plots/paper_versions/debug/no_srm_sl/' + roi + '/separate_runs/with_SRM/' + song_names[song_number] + '_' + roi + '_with_SRM_run' + str(runNum + 1))
+plt.savefig('plots/mcdermott_lab/' + 'run1_run2_corr_' + roi)
 #
 #
 
