@@ -14,9 +14,10 @@ from scipy.io import wavfile
 from pydub import AudioSegment
 from ffmpy import FFmpeg
 
+song_name = 'Change_of_the_Guard'
 datadir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/chris_dartmouth/data/'
 songdir = '/jukebox/norman/jamalw/MES/data/songs/'
-song_fn = [songdir + 'Early_Summer.wav']
+song_fn = [songdir + song_name + '.wav']
 ann_dirs = '/jukebox/norman/jamalw/MES/prototype/link/scripts/data/searchlight_output/HMM_searchlight_K_sweep_srm/'
 
 FFMPEG_BIN = "ffmpeg"
@@ -27,8 +28,6 @@ def update_line(num, line):
 
     return line
 
-# set song names and bounds
-song_name = 'Change_of_the_Guard'
 
 # run 1 durations
 durs1 = np.array([225,89,180,134,90,180,134,90,179,135,224,89,224,225,179,134])
@@ -104,6 +103,7 @@ ev = brainiak.eventseg.event.EventSegment(len(human_bounds)-1)
 ev.fit(avg_response_combo.T)
 
 bounds = np.where(np.diff(np.argmax(ev.segments_[0], axis=1)))[0]
+bounds_w_zero = np.concatenate(([0], bounds))
 
 X_MIN = 0 
 X_MAX = human_bounds[-1]
@@ -120,11 +120,11 @@ ax1 = plt.gca()
 bounds_aug = np.concatenate(([0],bounds,[nTR]))
 
 # save out human bounds, hmm bounds, and shared data
-animation_dir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/plots/IMS_animation/'
-np.save(animation_dir + song_name + '_shared_data', avg_response_combo)
-np.save(animation_dir + song_name + '_human_bounds',human_bounds)
-np.save(animation_dir + song_name + '_hmm_bounds', bounds_aug)
-
+#animation_dir = '/jukebox/norman/jamalw/MES/prototype/link/scripts/plots/IMS_animation/'
+#np.save(animation_dir + song_name + '_shared_data', avg_response_combo)
+#np.save(animation_dir + song_name + '_human_bounds',human_bounds)
+#np.save(animation_dir + song_name + '_hmm_bounds', bounds_aug)
+#
 for i in range(len(bounds_aug)-1):
     rect = patches.Rectangle((bounds_aug[i],bounds_aug[i]),bounds_aug[i+1]-bounds_aug[i],bounds_aug[i+1]-bounds_aug[i],linewidth=3,edgecolor='w',facecolor='none')
     ax1.add_patch(rect)
