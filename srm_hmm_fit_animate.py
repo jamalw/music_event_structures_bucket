@@ -62,7 +62,7 @@ for i in range(0,train.shape[2]):
     test_list.append(test[:,:,i])
 
 # Initialize model
-numFeatures = 10
+numFeatures = 40
 print('Building Model')
 srm = SRM(n_iter=10, features=numFeatures)
 
@@ -155,7 +155,7 @@ mp4_musicName = 'temp_plot_data/' + song_name + '_with_music.mp4'
 
 Writer = animation.writers['ffmpeg']
 writer = Writer(fps=1, metadata=dict(artist='Me'),bitrate=1800, extra_args=['-vcodec', 'libx264'])
-line_anim.save(song_name + '_mPFC_K10_IMS.gif',writer='imagekick',fps=1)
+line_anim.save(song_name + '_mPFC_K40_IMS.gif',writer='imagekick',fps=1)
 
 ff_gif_to_mp4 = FFmpeg(inputs={gifName:None},outputs={mp4Name:'-vb 40M -pix_fmt yuv420p -y'})
 
