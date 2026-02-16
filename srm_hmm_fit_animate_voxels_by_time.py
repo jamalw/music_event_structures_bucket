@@ -55,6 +55,9 @@ LEGEND_HUMAN_EDGE_LW = 2.0
 # User-provided F1 to show in legend
 F1_TO_DISPLAY = 1.0
 
+# Colorbar label (set per plot type if you want)
+COLORBAR_LABEL = 'Cosine similarity'
+
 # ------------------------
 # Song bookkeeping
 # ------------------------
@@ -160,14 +163,21 @@ def mux_audio(video_mp4, out_mp4):
         out_mp4
     ])
 
-def render_matrix_video(matrix, title, ylab, out_stub):
+def render_matrix_video(matrix, title, ylab, out_stub, cbar_label=COLORBAR_LABEL):
     fig, ax = plt.subplots(figsize=(12, 7))
-    ax.imshow(matrix, aspect='auto', interpolation='nearest', origin='lower')
+
+    # IMPORTANT: keep handle to the image for the colorbar
+    im = ax.imshow(matrix, aspect='auto', interpolation='nearest', origin='lower')
 
     ax.set_title(title, fontsize=TITLE_SIZE, fontweight='bold')
     ax.set_xlabel('TRs', fontsize=LABEL_SIZE, fontweight='bold')
     ax.set_ylabel(ylab, fontsize=LABEL_SIZE, fontweight='bold')
     ax.tick_params(axis='both', which='major', labelsize=TICK_SIZE)
+
+    # ---- Add a labeled colorbar ----
+    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
+    cbar.set_label(cbar_label, fontsize=LABEL_SIZE, fontweight='bold')
+    cbar.ax.tick_params(labelsize=TICK_SIZE)
 
     # ---- Legend handles (boxes + F1 text) ----
     human_handle = Line2D(
@@ -224,7 +234,7 @@ def render_matrix_video(matrix, title, ylab, out_stub):
     ax.legend(
         handles=[human_handle, hmm_handle, f1_handle],
         loc='upper left',
-        bbox_to_anchor=(1.02, 1.0),
+        bbox_to_anchor=(1.18, 1.0),
         borderaxespad=0.0,
         frameon=True,
         fontsize=14,
@@ -280,7 +290,8 @@ if RENDER_EVENT_TEMPLATE_SIM:
         sim,
         title=f"Human and HMM Fit to mPFC ({song_name.replace('_', ' ')})",
         ylab='Event (k)',
-        out_stub=f'{song_name}_K{numFeatures}_event_template_sim'
+        out_stub=f'{song_name}_K{numFeatures}_event_template_sim',
+        cbar_label='Cosine similarity'
     )
 
 # ------------------------
@@ -292,7 +303,8 @@ if RENDER_TR_TR_SIM:
         trtr,
         title=f"{song_name.replace('_', ' ')}: TR x TR similarity",
         ylab='TR',
-        out_stub=f'{song_name}_K{numFeatures}_TRxTR'
+        out_stub=f'{song_name}_K{numFeatures}_TRxTR',
+        cbar_label='Correlation'
     )
 
 # ------------------------
@@ -303,6 +315,7 @@ if RENDER_FEATURES_BY_TIME:
         avg_response_combo,
         title=f"{song_name.replace('_', ' ')}: SRM shared response",
         ylab='SRM feature',
-        out_stub=f'{song_name}_K{numFeatures}_features_by_time'
+        out_stub=f'{song_name}_K{numFeatures}_features_by_time',
+        cbar_label='SRM value (a.u.)'
     )
 
